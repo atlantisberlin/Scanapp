@@ -154,6 +154,11 @@
     .id-block .lbl { font-size: 10px; color: var(--text3); display: block; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 2px; }
     .id-block .val { font-size: 12px; color: var(--text2); font-family: 'SF Mono', 'Fira Code', monospace; }
 
+    /* Kopieren-Button */
+    .copy-btn { background: none; border: none; cursor: pointer; color: var(--text3); padding: 2px 4px; border-radius: 4px; font-size: 14px; vertical-align: middle; transition: color 0.15s; }
+    .copy-btn:active { color: var(--blue); }
+    .copy-btn.copied { color: var(--green-text); }
+
     /* Aktionsangebot Banner */
     .aktion-banner { display: flex; align-items: flex-start; gap: 10px; background: linear-gradient(135deg, #FFF3CD, #FFE69C); border: 1.5px solid #FFCA28; border-radius: var(--radius); padding: 11px 13px; margin-bottom: 12px; }
     .aktion-banner i { font-size: 20px; color: #E65100; flex-shrink: 0; margin-top: 1px; }
@@ -559,9 +564,12 @@
           <div class="article-meta-col">
             <div>
               <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px">Artikelnr.</div>
-              ${atlosUrl
-                ? `<a href="${escHtml(atlosUrl)}" target="_blank" class="article-artikelnr" style="color:var(--blue);text-decoration:none"><i class="ti ti-external-link" style="font-size:10px;margin-right:3px"></i>${escHtml(item.ARTIKELNR)}</a>`
-                : `<div class="article-artikelnr">${escHtml(item.ARTIKELNR)}</div>`}
+              <div style="display:flex;align-items:center;gap:4px">
+                ${atlosUrl
+                  ? `<a href="${escHtml(atlosUrl)}" target="_blank" class="article-artikelnr" style="color:var(--blue);text-decoration:none"><i class="ti ti-external-link" style="font-size:10px;margin-right:3px"></i>${escHtml(item.ARTIKELNR)}</a>`
+                  : `<span class="article-artikelnr">${escHtml(item.ARTIKELNR)}</span>`}
+                <button class="copy-btn" onclick="copyArticleNr('${item.ARTIKELNR.replace(/'/g,"\'")}', this)" title="Artikelnummer kopieren"><i class="ti ti-copy"></i></button>
+              </div>
             </div>
             ${item.EAN ? `<div>
               <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px">EAN</div>
@@ -674,9 +682,12 @@
                 onerror="this.style.display='none'">
             </a>` : ''}
             <div class="variant-info">
-              <a href="${escHtml(url)}" target="_blank" class="variant-artikelnr-link">
-                <i class="ti ti-external-link" style="font-size:11px;margin-right:3px" aria-hidden="true"></i>${escHtml(s.ARTIKELNR)}
-              </a>
+              <div style="display:flex;align-items:center;gap:4px">
+                <a href="${escHtml(url)}" target="_blank" class="variant-artikelnr-link">
+                  <i class="ti ti-external-link" style="font-size:11px;margin-right:3px" aria-hidden="true"></i>${escHtml(s.ARTIKELNR)}
+                </a>
+                <button class="copy-btn" onclick="copyArticleNr('${s.ARTIKELNR.replace(/'/g,"\'")}', this)" title="Artikelnummer kopieren"><i class="ti ti-copy"></i></button>
+              </div>
               <div class="variant-price-row">
                 ${preis > 0
                   ? `<span class="variant-price-main">€ ${preis.toFixed(2).replace('.', ',')}</span>`
@@ -854,6 +865,34 @@
     }
     document.getElementById('video-wrapper').style.display = 'none';
     document.getElementById('scan-btn').style.display = 'flex';
+  }
+
+  // Artikelnummer kopieren
+  function copyArticleNr(nr, btn) {
+    navigator.clipboard.writeText(nr).then(() => {
+      btn.classList.add('copied');
+      btn.innerHTML = '<i class="ti ti-check"></i>';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.innerHTML = '<i class="ti ti-copy"></i>';
+      }, 1500);
+    }).catch(() => {
+      // Fallback für ältere Browser
+      const ta = document.createElement('textarea');
+      ta.value = nr;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      btn.classList.add('copied');
+      btn.innerHTML = '<i class="ti ti-check"></i>';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.innerHTML = '<i class="ti ti-copy"></i>';
+      }, 1500);
+    });
   }
 
   // ─── STANDORT-LOGIK ──────────────────────────────────────────────────────
