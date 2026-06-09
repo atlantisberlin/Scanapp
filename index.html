@@ -516,18 +516,34 @@
   async function startScanner() {
     const vw  = document.getElementById('video-wrapper');
     const btn = document.getElementById('scan-btn');
+
+    // HTTPS-Prüfung
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+      showError('Kamera benötigt HTTPS. Bitte die App über die GitHub-Pages-URL öffnen (https://…).');
+      return;
+    }
+
     vw.style.display = 'block';
     btn.style.display = 'none';
     scanActive = true;
 
     try {
-      if (typeof ZXing === 'undefined') throw new Error('ZXing nicht geladen');
-      codeReader = new ZXing.BrowserMultiFormatReader();
-      const devices   = await ZXing.BrowserMultiFormatReader.listVideoInputDevices();
-      // Rückkamera bevorzugen (letztes Gerät auf Smartphones)
-      const deviceId  = devices.length > 1 ? devices[devices.length - 1].deviceId : devices[0]?.deviceId;
+      // Schritt 1: Kamera-Stream direkt anfordern (löst Berechtigungs-Dialog aus)
+      // facingMode: environment = Rückkamera bevorzugen
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
 
-      await codeReader.decodeFromVideoDevice(deviceId, 'scanner-video', (result, err) => {
+      // Stream sofort ins Video-Element setzen (sichtbares Feedback)
+      const videoEl = document.getElementById('scanner-video');
+      videoEl.srcObject = stream;
+      await videoEl.play();
+
+      // Schritt 2: ZXing auf dem laufenden Video-Element starten
+      if (typeof ZXing === 'undefined') throw new Error('ZXing-Bibliothek nicht geladen');
+      codeReader = new ZXing.BrowserMultiFormatReader();
+
+      await codeReader.decodeFromVideoElement(videoEl, (result, err) => {
         if (result && scanActive) {
           scanActive = false;
           const code = result.getText();
@@ -537,15 +553,21 @@
           if (item) renderResult(item);
           else showError('EAN ' + code + ' nicht in der Datenbank gefunden.');
         }
+        // ZXing wirft bei jedem Frame ohne Ergebnis einen Fehler — ignorieren
       });
+
     } catch (e) {
       stopScanner();
-      if (e.name === 'NotAllowedError') {
-        showError('Kamera-Zugriff verweigert. Bitte in den Browser-Einstellungen erlauben.');
+      console.error('Scanner-Fehler:', e.name, e.message);
+      if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
+        showError('Kamera-Zugriff verweigert. Bitte im Browser unter Einstellungen → Datenschutz die Kamera für diese Seite erlauben, dann neu laden.');
+      } else if (e.name === 'NotFoundError' || e.name === 'DevicesNotFoundError') {
+        showError('Keine Kamera gefunden. Bitte sicherstellen, dass das Gerät eine Kamera hat.');
+      } else if (e.name === 'NotReadableError') {
+        showError('Kamera wird bereits von einer anderen App verwendet. Bitte diese schließen und erneut versuchen.');
       } else {
-        showError('Kamera nicht verfügbar. Bitte manuell eingeben.');
+        showError('Kamera konnte nicht gestartet werden (' + e.name + '). Bitte manuell eingeben.');
       }
-      console.error(e);
     }
   }
 
@@ -559,7 +581,7 @@
       video.srcObject = null;
     }
     document.getElementById('video-wrapper').style.display = 'none';
-    document.getElementById('scan-btn').style.display    = 'flex';
+    document.getElementById('scan-btn').style.display = 'flex';
   }
 
   // Beim Laden sofort Daten holen
