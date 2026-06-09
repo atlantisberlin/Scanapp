@@ -140,16 +140,12 @@
     .price-uvp { font-size: 13px; color: var(--text3); text-decoration: line-through; }
     .price-saving { font-size: 12px; padding: 3px 9px; background: var(--green-bg); color: var(--green-text); border-radius: 20px; font-weight: 600; }
     .section-label { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 9px; }
-    .stock-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; margin-bottom: 8px; }
-    .stock-item { background: var(--bg2); border-radius: var(--radius); padding: 11px 13px; }
-    .stock-loc { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
-    .stock-num { font-size: 20px; font-weight: 700; }
-    .stock-details { margin-bottom: 14px; }
-    .stock-details summary { font-size: 12px; color: var(--text2); cursor: pointer; padding: 8px 13px; background: var(--bg2); border-radius: var(--radius); list-style: none; display: flex; align-items: center; justify-content: space-between; user-select: none; }
-    .stock-details summary::-webkit-details-marker { display: none; }
-    .stock-details summary .chevron { font-size: 14px; transition: transform 0.2s; }
-    .stock-details[open] summary .chevron { transform: rotate(180deg); }
-    .stock-details-inner { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; margin-top: 8px; }
+    .stock-grid { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 6px; margin-bottom: 14px; }
+    .stock-item { background: var(--bg2); border-radius: var(--radius); padding: 8px 6px; text-align: center; }
+    .stock-loc { font-size: 10px; color: var(--text2); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .stock-num { font-size: 18px; font-weight: 700; }
+    /* hide old details/extra — all 5 now in one row */
+    .stock-details { display: none; }
     .s0 { color: var(--text3); }
     .slow { color: var(--amber-text); }
     .sok { color: var(--green-text); }
@@ -218,11 +214,11 @@
     .variant-info { flex: 1; min-width: 0; }
     .variant-artikelnr-link { display: inline-block; font-size: 12px; font-family: 'SF Mono','Fira Code',monospace; color: var(--blue); text-decoration: none; margin-bottom: 4px; word-break: break-all; }
     .variant-artikelnr-link:hover { text-decoration: underline; }
-    .variant-stock-mini { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 6px; }
-    .variant-stock-mini-extra { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 6px; margin-top: 6px; }
-    .vsitem { background: var(--bg2); border-radius: var(--radius); padding: 7px 10px; }
-    .vsloc { font-size: 11px; color: var(--text3); margin-bottom: 2px; }
-    .vsnum { font-size: 15px; font-weight: 700; }
+    .variant-stock-mini { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 5px; }
+    .variant-stock-mini-extra { display: none; }
+    .vsitem { background: var(--bg2); border-radius: var(--radius); padding: 6px 4px; text-align: center; }
+    .vsloc { font-size: 10px; color: var(--text3); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vsnum { font-size: 14px; font-weight: 700; }
 
     .variant-price-row { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; margin-top: 4px; }
     .variant-price-main { font-size: 16px; font-weight: 700; color: var(--text); }
@@ -501,14 +497,13 @@
       { name: 'Coppi',        val: parseInt(item.Coppi)        || 0 },
       { name: 'Steglitz',     val: parseInt(item.Steglitz)     || 0 },
       { name: 'Zentrallager', val: parseInt(item.Zentrallager) || 0 },
+      { name: 'Freiburg',     val: parseInt(item.Freiburg)     || 0 },
+      { name: 'Hamburg',      val: parseInt(item.Hamburg)      || 0 },
     ];
-    const extraLocs = [
-      { name: 'Freiburg', val: parseInt(item.Freiburg) || 0 },
-      { name: 'Hamburg',  val: parseInt(item.Hamburg)  || 0 },
-    ];
-    const locs = [...mainLocs, ...extraLocs];
+    const extraLocs = [];
+    const locs = mainLocs;
     const total = locs.reduce((s, l) => s + l.val, 0);
-    const extraTotal = extraLocs.reduce((s, l) => s + l.val, 0);
+    const extraTotal = 0;
 
     const hasImg = item.BILD_URL && item.BILD_URL.trim() !== '' && item.BILD_URL !== 'default.jpg';
     const imgSrc  = hasImg ? `https://www.atlantiscloud.de/images/products/normal/${item.BILD_URL.trim()}` : '';
@@ -627,15 +622,14 @@
       const savPct   = (uvp > preis && preis > 0) ? Math.round((1 - preis / uvp) * 100) : 0;
       const isRp     = (s.Restposten || '').trim().toUpperCase() === 'JA';
       const isInactive = (s.Status || '').trim() === '0' || (s.Status || '').trim().toUpperCase() !== 'JA';
-      const locs = [
+      const mainLocs = [
         { name: 'Coppi',        val: parseInt(s.Coppi)        || 0 },
         { name: 'Steglitz',     val: parseInt(s.Steglitz)     || 0 },
         { name: 'Zentrallager', val: parseInt(s.Zentrallager) || 0 },
         { name: 'Freiburg',     val: parseInt(s.Freiburg)     || 0 },
         { name: 'Hamburg',      val: parseInt(s.Hamburg)      || 0 },
       ];
-      const mainLocs  = locs.slice(0, 3);
-      const extraLocs = locs.slice(3);
+      const extraLocs = [];
 
       const vStatusRaw = (s.Status || '').trim();
       const vIsActive  = vStatusRaw.toUpperCase() === 'JA';
