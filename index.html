@@ -154,6 +154,15 @@
     .id-block .lbl { font-size: 10px; color: var(--text3); display: block; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 2px; }
     .id-block .val { font-size: 12px; color: var(--text2); font-family: 'SF Mono', 'Fira Code', monospace; }
 
+    /* Aktionsangebot Banner */
+    .aktion-banner { display: flex; align-items: flex-start; gap: 10px; background: linear-gradient(135deg, #FFF3CD, #FFE69C); border: 1.5px solid #FFCA28; border-radius: var(--radius); padding: 11px 13px; margin-bottom: 12px; }
+    .aktion-banner i { font-size: 20px; color: #E65100; flex-shrink: 0; margin-top: 1px; }
+    .aktion-banner-text { flex: 1; }
+    .aktion-banner-label { font-size: 10px; font-weight: 700; color: #E65100; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+    .aktion-banner-msg { font-size: 13px; font-weight: 500; color: #3E2000; line-height: 1.4; }
+    /* Variante Aktions-Badge */
+    .aktion-chip { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; background: #FFE69C; color: #E65100; border: 1px solid #FFCA28; margin-top: 3px; }
+
     /* Standort-Auswahl */
     .location-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; display: flex; align-items: flex-end; justify-content: center; padding: 16px; }
     .location-modal.hidden { display: none; }
@@ -524,6 +533,16 @@
             <i class="ti ti-tag"></i> Restposten — reduzierter Abverkauf
           </div>` : ''}
 
+        <!-- Aktionsangebot Banner -->
+        ${(item.Aktionsangebot && item.Aktionsangebot.trim()) ? `
+        <div class="aktion-banner">
+          <i class="ti ti-bolt"></i>
+          <div class="aktion-banner-text">
+            <div class="aktion-banner-label">⚡ Aktionsangebot</div>
+            <div class="aktion-banner-msg">${escHtml(item.Aktionsangebot.trim())}</div>
+          </div>
+        </div>` : ''}
+
         <!-- 3. Bild links, Artikelnr + EAN + Preis rechts -->
         <div class="article-top-row">
           <div class="article-img-col">
@@ -640,6 +659,7 @@
             <span style="display:inline-flex;gap:4px;margin-top:2px;flex-wrap:wrap">
               <span class="badge ${vIsActive ? 'badge-active' : 'badge-inactive'}" style="font-size:10px;padding:1px 7px">${vIsActive ? 'Aktiv' : 'Inaktiv'}</span>
               ${isRp ? '<span class="badge badge-outlet" style="font-size:10px;padding:1px 7px">Restposten</span>' : ''}
+              ${(s.Aktionsangebot && s.Aktionsangebot.trim()) ? `<span class="aktion-chip"><i class="ti ti-bolt" style="font-size:10px"></i> Aktion</span>` : ''}
             </span>
           </span>
           <span class="variant-stock ${scs}">${stk} Stk.</span>
@@ -666,6 +686,14 @@
               </div>
             </div>
           </div>
+          ${(s.Aktionsangebot && s.Aktionsangebot.trim()) ? `
+          <div class="aktion-banner" style="padding:8px 10px;margin-bottom:0">
+            <i class="ti ti-bolt" style="font-size:16px;color:#E65100;flex-shrink:0"></i>
+            <div class="aktion-banner-text">
+              <div class="aktion-banner-label">Aktionsangebot</div>
+              <div class="aktion-banner-msg">${escHtml(s.Aktionsangebot.trim())}</div>
+            </div>
+          </div>` : ''}
           <div class="variant-stock-mini">
             ${mainLocs.map(l => `<div class="vsitem ${locHighlight(l.name, 'highlight')}">
               <div class="vsloc">${l.name}</div>
