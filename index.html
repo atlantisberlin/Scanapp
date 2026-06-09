@@ -158,6 +158,30 @@
     .id-block .lbl { font-size: 10px; color: var(--text3); display: block; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 2px; }
     .id-block .val { font-size: 12px; color: var(--text2); font-family: 'SF Mono', 'Fira Code', monospace; }
 
+    /* Standort-Auswahl */
+    .location-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; display: flex; align-items: flex-end; justify-content: center; padding: 16px; }
+    .location-modal.hidden { display: none; }
+    .location-sheet { background: var(--bg); border-radius: var(--radius-lg); width: 100%; max-width: 480px; padding: 20px 16px 32px; }
+    .location-sheet h2 { font-size: 17px; font-weight: 600; margin-bottom: 6px; }
+    .location-sheet p { font-size: 13px; color: var(--text2); margin-bottom: 18px; }
+    .location-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .location-opt { padding: 14px 12px; border-radius: var(--radius); border: 1.5px solid var(--border); background: var(--bg2); cursor: pointer; text-align: center; font-size: 14px; font-weight: 500; color: var(--text); transition: all 0.15s; }
+    .location-opt:active { background: var(--bg3); }
+    .location-opt.selected { border-color: var(--blue); background: var(--blue-bg); color: var(--blue-text); }
+    .location-opt-all { grid-column: 1 / -1; }
+    .location-save { width: 100%; padding: 13px; background: var(--blue); color: #fff; border: none; border-radius: var(--radius); font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 4px; }
+    .location-bar { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 14px; padding: 8px 12px; border-radius: var(--radius); background: var(--blue-bg); color: var(--blue-text); cursor: pointer; }
+    .location-bar i { font-size: 15px; flex-shrink: 0; }
+    .location-bar span { flex: 1; font-weight: 500; }
+    .location-bar .change-btn { font-size: 11px; color: var(--blue); background: none; border: none; cursor: pointer; padding: 0; white-space: nowrap; }
+    /* Hervorgehobene Standort-Kachel */
+    .stock-item.highlight { background: var(--blue-bg); border: 1.5px solid var(--blue); }
+    .stock-item.highlight .stock-loc { color: var(--blue-text); font-weight: 600; }
+    .stock-item.highlight .stock-num { color: var(--blue-text); }
+    .vsitem.highlight { background: var(--blue-bg); border: 1.5px solid var(--blue); }
+    .vsitem.highlight .vsloc { color: var(--blue-text); font-weight: 600; }
+    .vsitem.highlight .vsnum { color: var(--blue-text); }
+
     /* Suchergebnisliste */
     .results-list { display: flex; flex-direction: column; gap: 6px; }
     .results-header { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 4px; }
@@ -239,6 +263,13 @@
     </button>
   </div>
 
+  <!-- Standort-Anzeige -->
+  <div class="location-bar" id="location-bar" onclick="document.getElementById('location-modal').classList.remove('hidden')" style="display:none">
+    <i class="ti ti-map-pin"></i>
+    <span id="location-label">Kein Standort gewählt</span>
+    <button class="change-btn">Ändern</button>
+  </div>
+
   <div class="scan-section">
     <div id="video-wrapper">
       <div id="qr-reader"></div>
@@ -266,6 +297,23 @@
       <i class="ti ti-barcode"></i>
       <p>Barcode scannen oder<br>EAN / Artikelnummer eingeben</p>
     </div>
+  </div>
+</div>
+
+<!-- Standort-Auswahl Modal -->
+<div class="location-modal hidden" id="location-modal">
+  <div class="location-sheet">
+    <h2>Standort wählen</h2>
+    <p>Euer Bestand wird hervorgehoben angezeigt.</p>
+    <div class="location-options">
+      <button class="location-opt" data-loc="Coppi" onclick="selectLoc(this)">Coppi</button>
+      <button class="location-opt" data-loc="Steglitz" onclick="selectLoc(this)">Steglitz</button>
+      <button class="location-opt" data-loc="Zentrallager" onclick="selectLoc(this)">Zentrallager</button>
+      <button class="location-opt" data-loc="Freiburg" onclick="selectLoc(this)">Freiburg</button>
+      <button class="location-opt" data-loc="Hamburg" onclick="selectLoc(this)">Hamburg</button>
+      <button class="location-opt location-opt-all" data-loc="" onclick="selectLoc(this)">Alle Standorte (kein Highlight)</button>
+    </div>
+    <button class="location-save" onclick="saveLocation()">Bestätigen</button>
   </div>
 </div>
 
@@ -524,20 +572,20 @@
         <div class="section-label">Bestand nach Standort</div>
         <div class="stock-grid">
           ${mainLocs.map(l => `
-            <div class="stock-item">
-              <div class="stock-loc">${l.name}</div>
+            <div class="stock-item ${locHighlight(l.name, 'highlight')}">
+              <div class="stock-loc">${l.name}${currentLocation === l.name ? ' <span style="font-size:10px;opacity:0.7">(hier)</span>' : ''}</div>
               <div class="stock-num ${stockColor(l.val)}">${l.val}</div>
             </div>`).join('')}
         </div>
-        <details class="stock-details">
+        <details class="stock-details" ${['Freiburg','Hamburg'].includes(currentLocation) ? 'open' : ''}>
           <summary>
             <span>Freiburg &amp; Hamburg${extraTotal > 0 ? ` · Gesamt: ${extraTotal}` : ' · kein Bestand'}</span>
             <i class="ti ti-chevron-down chevron"></i>
           </summary>
           <div class="stock-details-inner">
             ${extraLocs.map(l => `
-              <div class="stock-item">
-                <div class="stock-loc">${l.name}</div>
+              <div class="stock-item ${locHighlight(l.name, 'highlight')}">
+                <div class="stock-loc">${l.name}${currentLocation === l.name ? ' <span style="font-size:10px;opacity:0.7">(hier)</span>' : ''}</div>
                 <div class="stock-num ${stockColor(l.val)}">${l.val}</div>
               </div>`).join('')}
           </div>
@@ -625,13 +673,13 @@
             </div>
           </div>
           <div class="variant-stock-mini">
-            ${mainLocs.map(l => `<div class="vsitem">
+            ${mainLocs.map(l => `<div class="vsitem ${locHighlight(l.name, 'highlight')}">
               <div class="vsloc">${l.name}</div>
               <div class="vsnum ${sc(l.val)}">${l.val}</div>
             </div>`).join('')}
           </div>
           <div class="variant-stock-mini-extra">
-            ${extraLocs.map(l => `<div class="vsitem">
+            ${extraLocs.map(l => `<div class="vsitem ${locHighlight(l.name, 'highlight')}">
               <div class="vsloc">${l.name}</div>
               <div class="vsnum ${sc(l.val)}">${l.val}</div>
             </div>`).join('')}
@@ -784,8 +832,57 @@
     document.getElementById('scan-btn').style.display = 'flex';
   }
 
+  // ─── STANDORT-LOGIK ──────────────────────────────────────────────────────
+  const LOCATIONS = ['Coppi','Steglitz','Zentrallager','Freiburg','Hamburg'];
+  let currentLocation = '';
+  let pendingLocation = '';
+
+  function initLocation() {
+    const saved = localStorage.getItem('atl_location');
+    if (saved !== null) {
+      currentLocation = saved;
+      updateLocationBar();
+    } else {
+      // Erster Start: Modal anzeigen
+      setTimeout(() => document.getElementById('location-modal').classList.remove('hidden'), 800);
+    }
+  }
+
+  function updateLocationBar() {
+    const bar   = document.getElementById('location-bar');
+    const label = document.getElementById('location-label');
+    bar.style.display = 'flex';
+    label.textContent = currentLocation ? 'Mein Standort: ' + currentLocation : 'Alle Standorte';
+  }
+
+  function selectLoc(btn) {
+    document.querySelectorAll('.location-opt').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    pendingLocation = btn.dataset.loc;
+  }
+
+  function saveLocation() {
+    currentLocation = pendingLocation;
+    localStorage.setItem('atl_location', currentLocation);
+    document.getElementById('location-modal').classList.add('hidden');
+    updateLocationBar();
+    // Aktuell angezeigten Artikel neu rendern falls vorhanden
+    const q = document.getElementById('search-input').value.trim();
+    if (q) {
+      const item = findArticle(q);
+      if (item) renderResult(item);
+    }
+  }
+
+  // Highlight-Klasse für Standort-Kacheln
+  function locHighlight(name, cssClass) {
+    if (!currentLocation) return '';
+    return currentLocation === name ? cssClass : '';
+  }
+
   // Beim Laden sofort Daten holen
   loadData();
+  initLocation();
 </script>
 </body>
 </html>
