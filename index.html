@@ -285,9 +285,22 @@
   }
 
   // CSV-Parser (robust gegen Kommas in Anführungszeichen)
+  // Canonical field name map — maps any casing variant to the key used in code
+  const FIELD_MAP = {
+    'artikelnr': 'ARTIKELNR', 'ean': 'EAN', 'name': 'NAME', 'preis': 'PREIS',
+    'coppi': 'Coppi', 'zentrallager': 'Zentrallager', 'steglitz': 'Steglitz',
+    'freiburg': 'Freiburg', 'hamburg': 'Hamburg',
+    'master_slave': 'MASTER_SLAVE', 'uvp': 'UVP', 'marke': 'MARKE',
+    'kategorie': 'KATEGORIE', 'bild_url': 'BILD_URL',
+    'status': 'Status', 'restposten': 'Restposten',
+    'atlos_url': 'ATLOS_URL', 'master_model': 'MASTER_MODEL'
+  };
+
   function parseCSV(csv) {
     const lines = csv.trim().split('\n');
-    const headers = splitCSVLine(lines[0]).map(h => h.replace(/^"|"$/g, '').trim());
+    const rawHeaders = splitCSVLine(lines[0]).map(h => h.replace(/^"|"$/g, '').trim());
+    // Normalize headers via FIELD_MAP (case-insensitive lookup)
+    const headers = rawHeaders.map(h => FIELD_MAP[h.toLowerCase()] || h);
     const rows = [];
     for (let i = 1; i < lines.length; i++) {
       const vals = splitCSVLine(lines[i]);
