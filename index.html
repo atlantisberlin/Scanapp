@@ -100,11 +100,11 @@
 
     /* Video scanner */
     #video-wrapper { display: none; position: relative; border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; background: #000; }
-    #scanner-video { width: 100%; display: block; max-height: 220px; object-fit: cover; }
-    .scan-overlay { position: absolute; top:0;left:0;right:0;bottom:0; display:flex; align-items:center; justify-content:center; pointer-events:none; }
-    .scan-frame { width: 200px; height: 110px; border: 2px solid rgba(255,255,255,0.85); border-radius: 10px; }
-    .scan-hint { position: absolute; bottom: 10px; left: 0; right: 0; text-align: center; font-size: 12px; color: rgba(255,255,255,0.75); }
-    .close-scan { position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.55);color:#fff;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;pointer-events:all; }
+    #qr-reader { width: 100%; }
+    #qr-reader video { width: 100% !important; border-radius: var(--radius); }
+    #qr-reader__scan_region { border-radius: var(--radius); }
+    #qr-reader__dashboard { display: none !important; }
+    .close-scan { position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.55);color:#fff;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;pointer-events:all;z-index:10; }
 
     /* Main article top layout */
     .article-top-row { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
@@ -227,14 +227,8 @@
 
   <div class="scan-section">
     <div id="video-wrapper">
-      <video id="scanner-video" autoplay playsinline muted></video>
-      <div class="scan-overlay">
-        <div>
-          <div class="scan-frame"></div>
-          <div class="scan-hint">Barcode in den Rahmen halten</div>
-        </div>
-      </div>
-      <button class="close-scan" onclick="stopScanner()"><i class="ti ti-x"></i></button>
+      <div id="qr-reader"></div>
+      <button class="close-scan" onclick="stopScanner()" style="top:8px;right:8px"><i class="ti ti-x"></i></button>
     </div>
     <button class="scan-btn" id="scan-btn" onclick="startScanner()">
       <i class="ti ti-camera"></i> Barcode scannen
@@ -261,8 +255,8 @@
   </div>
 </div>
 
-<!-- ZXing Barcode Scanner -->
-<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.2/umd/index.min.js"></script>
+<!-- html5-qrcode: better mobile barcode scanner -->
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
   // ─── KONFIGURATION ────────────────────────────────────────────────────────
   const SHEET_ID = '1qu5AvF6iWvPISBCpYUtiSjdTEqXlQrO0Qtm5-jTVZLE';
@@ -271,7 +265,7 @@
   const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Sheet1`;
 
   let DATA = [];
-  let codeReader = null;
+  let html5QrCode = null;
   let scanActive = false;
 
   // Status-Anzeige
@@ -622,9 +616,13 @@
     const vw  = document.getElementById('video-wrapper');
     const btn = document.getElementById('scan-btn');
 
-    // HTTPS-Prüfung
     if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
       showError('Kamera benötigt HTTPS. Bitte die App über die GitHub-Pages-URL öffnen (https://…).');
+      return;
+    }
+
+    if (typeof Html5Qrcode === 'undefined') {
+      showError('Scanner-Bibliothek nicht geladen. Bitte Seite neu laden.');
       return;
     }
 
@@ -633,57 +631,60 @@
     scanActive = true;
 
     try {
-      // Schritt 1: Kamera-Stream direkt anfordern (löst Berechtigungs-Dialog aus)
-      // facingMode: environment = Rückkamera bevorzugen
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
-      });
+      html5QrCode = new Html5Qrcode('qr-reader');
 
-      // Stream sofort ins Video-Element setzen (sichtbares Feedback)
-      const videoEl = document.getElementById('scanner-video');
-      videoEl.srcObject = stream;
-      await videoEl.play();
+      const config = {
+        fps: 15,
+        qrbox: { width: 280, height: 140 },
+        aspectRatio: 1.7,
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.CODE_128,
+          Html5QrcodeSupportedFormats.CODE_39,
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.UPC_E,
+        ]
+      };
 
-      // Schritt 2: ZXing auf dem laufenden Video-Element starten
-      if (typeof ZXing === 'undefined') throw new Error('ZXing-Bibliothek nicht geladen');
-      codeReader = new ZXing.BrowserMultiFormatReader();
-
-      await codeReader.decodeFromVideoElement(videoEl, (result, err) => {
-        if (result && scanActive) {
+      await html5QrCode.start(
+        { facingMode: 'environment' },
+        config,
+        (decodedText) => {
+          if (!scanActive) return;
           scanActive = false;
-          const code = result.getText();
           stopScanner();
-          document.getElementById('search-input').value = code;
-          const item = findArticle(code);
+          document.getElementById('search-input').value = decodedText;
+          const item = findArticle(decodedText);
           if (item) renderResult(item);
-          else showError('EAN ' + code + ' nicht in der Datenbank gefunden.');
-        }
-        // ZXing wirft bei jedem Frame ohne Ergebnis einen Fehler — ignorieren
-      });
+          else showError('EAN ' + decodedText + ' nicht in der Datenbank gefunden.');
+        },
+        () => { /* Kein Barcode im Frame — ignorieren */ }
+      );
 
     } catch (e) {
       stopScanner();
-      console.error('Scanner-Fehler:', e.name, e.message);
-      if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
-        showError('Kamera-Zugriff verweigert. Bitte im Browser unter Einstellungen → Datenschutz die Kamera für diese Seite erlauben, dann neu laden.');
-      } else if (e.name === 'NotFoundError' || e.name === 'DevicesNotFoundError') {
-        showError('Keine Kamera gefunden. Bitte sicherstellen, dass das Gerät eine Kamera hat.');
-      } else if (e.name === 'NotReadableError') {
-        showError('Kamera wird bereits von einer anderen App verwendet. Bitte diese schließen und erneut versuchen.');
+      console.error('Scanner-Fehler:', e);
+      const msg = String(e);
+      if (msg.includes('NotAllowed') || msg.includes('Permission')) {
+        showError('Kamera-Zugriff verweigert. Bitte in den Browser-Einstellungen die Kamera für diese Seite erlauben.');
+      } else if (msg.includes('NotFound')) {
+        showError('Keine Kamera gefunden.');
       } else {
-        showError('Kamera konnte nicht gestartet werden (' + e.name + '). Bitte manuell eingeben.');
+        showError('Kamera konnte nicht gestartet werden. Bitte manuell eingeben.');
       }
     }
   }
 
   // Scanner stoppen
-  function stopScanner() {
+  async function stopScanner() {
     scanActive = false;
-    if (codeReader) { try { codeReader.reset(); } catch(e){} codeReader = null; }
-    const video = document.getElementById('scanner-video');
-    if (video.srcObject) {
-      video.srcObject.getTracks().forEach(t => t.stop());
-      video.srcObject = null;
+    if (html5QrCode) {
+      try {
+        if (html5QrCode.isScanning) await html5QrCode.stop();
+        html5QrCode.clear();
+      } catch(e) {}
+      html5QrCode = null;
     }
     document.getElementById('video-wrapper').style.display = 'none';
     document.getElementById('scan-btn').style.display = 'flex';
