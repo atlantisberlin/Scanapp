@@ -418,53 +418,48 @@
   }
 
   function buildVariantsHTML(item) {
-    const ms = (item.MASTER_SLAVE || '').trim();
+    const role        = (item.MASTER_SLAVE  || '').trim().toUpperCase(); // 'M' or 'S'
+    const masterModel = (item.MASTER_MODEL  || '').trim();               // e.g. 'mar-410003master'
+    const STOCK_KEYS  = ['Coppi','Steglitz','Zentrallager','Freiburg','Hamburg'];
+    const totalStock  = r => STOCK_KEYS.reduce((s,k) => s + (parseInt(r[k]) || 0), 0);
+    const sc          = n => n === 0 ? 's0' : n <= 1 ? 'slow' : 'sok';
 
-    // Case 1: this item has a master reference (ms is an artikelnr, not M or S)
-    if (ms && ms !== 'M' && ms !== 'S') {
-      const master = DATA.find(r => r.ARTIKELNR === ms);
-      const masterName = master ? master.NAME : ms;
-      // Find all siblings (same master)
-      const siblings = DATA.filter(r => (r.MASTER_SLAVE || '').trim() === ms && r.ARTIKELNR !== item.ARTIKELNR);
-      const masterStock = master ? (['Coppi','Steglitz','Zentrallager','Freiburg','Hamburg'].reduce((s,k)=>s+(parseInt(master[k])||0),0)) : null;
+    // ── Slave: has a MASTER_MODEL reference ──────────────────────────────────
+    if (role === 'S' && masterModel) {
+      // all siblings share the same MASTER_MODEL, exclude current item
+      const siblings = DATA.filter(r =>
+        (r.MASTER_MODEL || '').trim() === masterModel &&
+        r.ARTIKELNR !== item.ARTIKELNR
+      );
+      if (siblings.length === 0) return '';
 
       let html = '<div class="variants-section"><div class="divider-thin"></div>';
-      html += '<div class="variants-label">Master-Artikel</div>';
-      html += `<button class="master-link" onclick="loadArticle('${escHtml(ms)}')">
-        <i class="ti ti-box-multiple"></i>
-        <div class="master-link-text">
-          <span class="mlbl">Zum Master wechseln</span>
-          <span class="mval">${escHtml(masterName)}</span>
-        </div>
-        <i class="ti ti-arrow-right"></i>
-      </button>`;
-
-      if (siblings.length > 0) {
-        html += '<div class="variants-label" style="margin-top:12px">Weitere Varianten (' + siblings.length + ')</div>';
-        siblings.forEach(s => {
-          const stock = ['Coppi','Steglitz','Zentrallager','Freiburg','Hamburg'].reduce((sum,k)=>sum+(parseInt(s[k])||0),0);
-          const sc = stock === 0 ? 's0' : stock <= 1 ? 'slow' : 'sok';
-          html += `<button class="variant-row" onclick="loadArticle('${escHtml(s.ARTIKELNR)}')">
-            <span class="variant-name">${escHtml(s.NAME)}</span>
-            <span class="variant-stock ${sc}">${stock} Stk.</span>
-          </button>`;
-        });
-      }
+      html += '<div class="variants-label">Weitere Varianten dieser Artikelgruppe (' + siblings.length + ')</div>';
+      siblings.forEach(s => {
+        const stk = totalStock(s);
+        html += `<button class="variant-row" onclick="loadArticle('${s.ARTIKELNR.replace(/'/g,"\'")}')">
+          <span class="variant-name">${escHtml(s.NAME)}</span>
+          <span class="variant-stock ${sc(stk)}">${stk} Stk.</span>
+        </button>`;
+      });
       html += '</div>';
       return html;
     }
 
-    // Case 2: this item IS a master (ms === 'M') — find all slaves referencing this artikelnr
-    const slaves = DATA.filter(r => (r.MASTER_SLAVE || '').trim() === item.ARTIKELNR);
-    if (slaves.length > 0) {
+    // ── Master: find all slaves that reference this item's ARTIKELNR ─────────
+    if (role === 'M') {
+      const slaves = DATA.filter(r =>
+        (r.MASTER_MODEL || '').trim() === item.ARTIKELNR
+      );
+      if (slaves.length === 0) return '';
+
       let html = '<div class="variants-section"><div class="divider-thin"></div>';
       html += '<div class="variants-label">Varianten (' + slaves.length + ')</div>';
       slaves.forEach(s => {
-        const stock = ['Coppi','Steglitz','Zentrallager','Freiburg','Hamburg'].reduce((sum,k)=>sum+(parseInt(s[k])||0),0);
-        const sc = stock === 0 ? 's0' : stock <= 1 ? 'slow' : 'sok';
-        html += `<button class="variant-row" onclick="loadArticle('${escHtml(s.ARTIKELNR)}')">
+        const stk = totalStock(s);
+        html += `<button class="variant-row" onclick="loadArticle('${s.ARTIKELNR.replace(/'/g,"\'")}')">
           <span class="variant-name">${escHtml(s.NAME)}</span>
-          <span class="variant-stock ${sc}">${stock} Stk.</span>
+          <span class="variant-stock ${sc(stk)}">${stk} Stk.</span>
         </button>`;
       });
       html += '</div>';
