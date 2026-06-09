@@ -350,8 +350,8 @@
   // Artikel-Karte rendern
   function renderResult(item) {
     const isRestposten = (item.Restposten || '').trim().toUpperCase() === 'JA';
-    const isActive     = (item.Status || '').trim().toUpperCase() === 'JA';
-    // Status-Badge: nur Aktiv/Inaktiv — Restposten wird separat als Banner angezeigt
+    const statusRaw    = (item.Status || '').trim();
+    const isActive     = statusRaw.toUpperCase() === 'JA';
     const statusLabel  = isActive ? 'Aktiv' : 'Inaktiv';
     const statusClass  = isActive ? 'badge-active' : 'badge-inactive';
 
@@ -399,14 +399,19 @@
         <div class="article-top-row">
           <div class="article-img-col">
             ${hasImg
-              ? `<img src="${escHtml(imgSrc)}" alt="Produktbild"
-                   onerror="this.parentNode.innerHTML='<div class=\'img-placeholder\'><i class=\'ti ti-photo-off\'></i><span>Kein Bild</span></div>'">`
+              ? (atlosUrl
+                  ? `<a href="${escHtml(atlosUrl)}" target="_blank" style="display:block;width:100%;height:100%"><img src="${escHtml(imgSrc)}" alt="Produktbild" style="width:100%;height:100%;object-fit:contain;padding:6px"
+                       onerror="this.parentNode.innerHTML='<div class=\'img-placeholder\'><i class=\'ti ti-photo-off\'></i><span>Kein Bild</span></div>'"></a>`
+                  : `<img src="${escHtml(imgSrc)}" alt="Produktbild"
+                       onerror="this.parentNode.innerHTML='<div class=\'img-placeholder\'><i class=\'ti ti-photo-off\'></i><span>Kein Bild</span></div>'">`)
               : '<div class="img-placeholder"><i class="ti ti-photo-off"></i><span>Kein Bild</span></div>'}
           </div>
           <div class="article-meta-col">
             <div>
               <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px">Artikelnr.</div>
-              <div class="article-artikelnr">${escHtml(item.ARTIKELNR)}</div>
+              ${atlosUrl
+                ? `<a href="${escHtml(atlosUrl)}" target="_blank" class="article-artikelnr" style="color:var(--blue);text-decoration:none"><i class="ti ti-external-link" style="font-size:10px;margin-right:3px"></i>${escHtml(item.ARTIKELNR)}</a>`
+                : `<div class="article-artikelnr">${escHtml(item.ARTIKELNR)}</div>`}
             </div>
             ${item.EAN ? `<div>
               <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px">EAN</div>
@@ -487,6 +492,7 @@
       const uvp      = parseFloat((s.UVP   || '0').replace(',', '.')) || 0;
       const savPct   = (uvp > preis && preis > 0) ? Math.round((1 - preis / uvp) * 100) : 0;
       const isRp     = (s.Restposten || '').trim().toUpperCase() === 'JA';
+      const isInactive = (s.Status || '').trim() === '0' || (s.Status || '').trim().toUpperCase() !== 'JA';
       const locs = [
         { name: 'Coppi',        val: parseInt(s.Coppi)        || 0 },
         { name: 'Steglitz',     val: parseInt(s.Steglitz)     || 0 },
@@ -497,12 +503,16 @@
       const mainLocs  = locs.slice(0, 3);
       const extraLocs = locs.slice(3);
 
+      const vStatusRaw = (s.Status || '').trim();
+      const vIsActive  = vStatusRaw.toUpperCase() === 'JA';
       return `<details class="variant-details">
         <summary class="variant-summary">
           <span class="variant-summary-left">
-            <span class="variant-name">${escHtml(s.NAME)}${isRp
-              ? '<span class="rp-badge rp-badge-yes" aria-label="Restposten">R</span>'
-              : '<span class="rp-badge rp-badge-no" aria-label="Kein Restposten">✓</span>'}</span>
+            <span class="variant-name">${escHtml(s.NAME)}</span>
+            <span style="display:inline-flex;gap:4px;margin-top:2px;flex-wrap:wrap">
+              <span class="badge ${vIsActive ? 'badge-active' : 'badge-inactive'}" style="font-size:10px;padding:1px 7px">${vIsActive ? 'Aktiv' : 'Inaktiv'}</span>
+              ${isRp ? '<span class="badge badge-outlet" style="font-size:10px;padding:1px 7px">Restposten</span>' : ''}
+            </span>
           </span>
           <span class="variant-stock ${scs}">${stk} Stk.</span>
           <i class="ti ti-chevron-down variant-chevron" aria-hidden="true"></i>
