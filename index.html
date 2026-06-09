@@ -569,7 +569,7 @@
 
     let html = '<div class="variants-section"><div class="divider-thin"></div>';
     html += '<div class="variants-label">Weitere Varianten dieser Artikelgruppe (' + siblings.length + ')</div>';
-    siblings.forEach(s => { html += renderVariant(s); });
+    siblings.sort((a,b) => (a.NAME||'').localeCompare(b.NAME||'', 'de')).forEach(s => { html += renderVariant(s); });
     html += '</div>';
     return html;
   }
