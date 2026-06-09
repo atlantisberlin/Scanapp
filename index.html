@@ -453,11 +453,13 @@
       const imgHtml = hasImg
         ? `<img src="https://www.atlantiscloud.de/images/products/mini/${escHtml(img)}" alt="" onerror="this.style.display='none';this.parentNode.innerHTML='<i class=\'ti ti-photo-off\'></i>'">`
         : '<i class="ti ti-photo-off"></i>';
+      const hasAktion = item.Aktionsangebot && item.Aktionsangebot.trim();
       return `<button class="result-row" onclick="selectResult('${item.ARTIKELNR.replace(/'/g,"\'")}')">
         <div class="result-row-img">${imgHtml}</div>
         <div class="result-row-info">
           <div class="result-row-name">${hl(item.NAME || item.ARTIKELNR)}</div>
           <div class="result-row-sub">${escHtml(item.ARTIKELNR)}</div>
+          ${hasAktion ? `<div style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;font-size:11px;font-weight:700;color:#E65100;background:#FFE69C;border:1px solid #FFCA28;border-radius:20px;padding:2px 8px"><i class="ti ti-bolt" style="font-size:11px"></i> ${escHtml(item.Aktionsangebot.trim())}</div>` : ''}
         </div>
         <span class="result-row-stock ${sc(stk)}">${stk} Stk.</span>
       </button>`;
