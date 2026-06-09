@@ -361,16 +361,19 @@
     );
   }
 
-  // Volltextsuche — EAN, Artikelnummer, Name (Teilbegriff)
+  // Mehrwort-Volltextsuche — jeder Begriff muss irgendwo in Name, Artikelnr oder EAN vorkommen
   function searchArticles(query) {
-    const q = query.trim().toLowerCase();
-    if (!q) return [];
-    return DATA.filter(r =>
-      r.EAN === q ||
-      r.ARTIKELNR.toLowerCase() === q ||
-      r.ARTIKELNR.toLowerCase().includes(q) ||
-      (r.NAME || '').toLowerCase().includes(q)
-    ).slice(0, 50); // max 50 Treffer
+    const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    if (!terms.length) return [];
+    return DATA.filter(r => {
+      const haystack = [
+        (r.ARTIKELNR || '').toLowerCase(),
+        (r.NAME      || '').toLowerCase(),
+        (r.EAN       || '').toLowerCase(),
+        (r.MARKE     || '').toLowerCase(),
+      ].join(' ');
+      return terms.every(t => haystack.includes(t));
+    }).slice(0, 50);
   }
 
   // Treffer-Liste rendern
