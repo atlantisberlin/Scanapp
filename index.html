@@ -867,32 +867,44 @@
     document.getElementById('scan-btn').style.display = 'flex';
   }
 
-  // Artikelnummer kopieren
+  // Artikelnummer kopieren — robust für iOS Safari + Android Chrome
   function copyArticleNr(nr, btn) {
-    navigator.clipboard.writeText(nr).then(() => {
+    function showSuccess() {
       btn.classList.add('copied');
       btn.innerHTML = '<i class="ti ti-check"></i>';
       setTimeout(() => {
         btn.classList.remove('copied');
         btn.innerHTML = '<i class="ti ti-copy"></i>';
       }, 1500);
-    }).catch(() => {
-      // Fallback für ältere Browser
-      const ta = document.createElement('textarea');
-      ta.value = nr;
-      ta.style.position = 'fixed';
-      ta.style.opacity = '0';
-      document.body.appendChild(ta);
-      ta.select();
+    }
+
+    // Methode 1: moderne Clipboard API (Chrome, Firefox, neuere Safari)
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(nr).then(showSuccess).catch(() => fallbackCopy(nr, btn, showSuccess));
+    } else {
+      fallbackCopy(nr, btn, showSuccess);
+    }
+  }
+
+  function fallbackCopy(nr, btn, onSuccess) {
+    // Methode 2: input-Element mit execCommand — funktioniert auf iOS Safari
+    const input = document.createElement('input');
+    input.setAttribute('type', 'text');
+    input.setAttribute('value', nr);
+    input.style.cssText = 'position:fixed;top:0;left:0;width:2em;height:2em;padding:0;border:none;outline:none;box-shadow:none;background:transparent;opacity:0';
+    document.body.appendChild(input);
+    input.focus();
+    input.select();
+    // iOS braucht setSelectionRange
+    input.setSelectionRange(0, input.value.length);
+    try {
       document.execCommand('copy');
-      document.body.removeChild(ta);
-      btn.classList.add('copied');
-      btn.innerHTML = '<i class="ti ti-check"></i>';
-      setTimeout(() => {
-        btn.classList.remove('copied');
-        btn.innerHTML = '<i class="ti ti-copy"></i>';
-      }, 1500);
-    });
+      onSuccess();
+    } catch(e) {
+      // Letzter Ausweg: Prompt anzeigen
+      window.prompt('Artikelnummer kopieren (Strg+C / Cmd+C):', nr);
+    }
+    document.body.removeChild(input);
   }
 
   // ─── STANDORT-LOGIK ──────────────────────────────────────────────────────
