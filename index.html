@@ -633,7 +633,7 @@
 
       const vStatusRaw = (s.Status || '').trim();
       const vIsActive  = vStatusRaw.toUpperCase() === 'JA';
-      return `<details class="variant-details">
+      return `<details class="variant-details" open>
         <summary class="variant-summary">
           <span class="variant-summary-left">
             <span class="variant-name">${escHtml(s.NAME)}</span>
