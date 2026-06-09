@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#ffffff">
+  <title>Artikelscanner</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.34.0/dist/tabler-icons.min.css">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --bg2: #f4f4f2;
+      --bg3: #ebebea;
+      --text: #1a1a1a;
+      --text2: #6b6b68;
+      --text3: #a0a09c;
+      --border: rgba(0,0,0,0.12);
+      --border2: rgba(0,0,0,0.22);
+      --blue: #185FA5;
+      --blue-bg: #E6F1FB;
+      --blue-text: #0C447C;
+      --green-bg: #EAF3DE;
+      --green-text: #3B6D11;
+      --amber-bg: #FAEEDA;
+      --amber-text: #854F0B;
+      --red-bg: #FCEBEB;
+      --red-text: #A32D2D;
+      --radius: 8px;
+      --radius-lg: 12px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1c1c1a;
+        --bg2: #252523;
+        --bg3: #2e2e2b;
+        --text: #f0f0ee;
+        --text2: #a0a09c;
+        --text3: #6b6b68;
+        --border: rgba(255,255,255,0.1);
+        --border2: rgba(255,255,255,0.2);
+        --blue: #378ADD;
+        --blue-bg: #042C53;
+        --blue-text: #B5D4F4;
+        --green-bg: #173404;
+        --green-text: #C0DD97;
+        --amber-bg: #412402;
+        --amber-text: #FAC775;
+        --red-bg: #501313;
+        --red-text: #F7C1C1;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { overflow-x: hidden; }
+    #app { max-width: 480px; margin: 0 auto; padding: 16px; min-height: 100vh; }
+
+    /* Header */
+    .header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; padding-bottom: 16px; border-bottom: 0.5px solid var(--border); }
+    .header-icon { width: 40px; height: 40px; border-radius: var(--radius); background: var(--blue-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .header-icon i { font-size: 20px; color: var(--blue); }
+    .header h1 { font-size: 17px; font-weight: 600; color: var(--text); line-height: 1.2; }
+    .header p { font-size: 12px; color: var(--text2); margin-top: 1px; }
+
+    /* Status bar */
+    .status-bar { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 14px; padding: 8px 12px; border-radius: var(--radius); background: var(--bg2); color: var(--text2); }
+    .status-bar i { font-size: 15px; flex-shrink: 0; }
+    .s-ok { color: var(--green-text); }
+    .s-loading { color: var(--blue); }
+    .s-error { color: var(--red-text); }
+    .reload-btn { background: none; border: none; cursor: pointer; color: var(--blue); font-size: 12px; padding: 0; margin-left: auto; display: flex; align-items: center; gap: 3px; white-space: nowrap; }
+    .reload-btn i { font-size: 13px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinning { animation: spin 1s linear infinite; display: inline-block; }
+
+    /* Scanner section */
+    .scan-section { background: var(--bg2); border-radius: var(--radius-lg); padding: 14px; margin-bottom: 16px; }
+    .scan-btn { width: 100%; padding: 13px; background: var(--blue); color: #fff; border: none; border-radius: var(--radius); font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 13px; transition: opacity 0.15s; }
+    .scan-btn:active { opacity: 0.85; }
+    .scan-btn:disabled { opacity: 0.45; cursor: default; }
+    .scan-btn i { font-size: 20px; }
+    .divider { display: flex; align-items: center; gap: 10px; margin-bottom: 13px; }
+    .divider span { font-size: 11px; color: var(--text3); white-space: nowrap; }
+    .divider-line { flex: 1; height: 0.5px; background: var(--border); }
+    .search-row { display: flex; gap: 8px; }
+    .search-row input {
+      flex: 1; padding: 10px 12px; border: 0.5px solid var(--border2);
+      border-radius: var(--radius); font-size: 14px;
+      background: var(--bg); color: var(--text);
+      outline: none; -webkit-appearance: none;
+    }
+    .search-row input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(24,95,165,0.12); }
+    .search-row button {
+      padding: 10px 16px; background: var(--bg); border: 0.5px solid var(--border2);
+      border-radius: var(--radius); font-size: 14px; cursor: pointer; color: var(--text);
+      white-space: nowrap; font-weight: 500; transition: background 0.1s;
+    }
+    .search-row button:active { background: var(--bg3); }
+
+    /* Video scanner */
+    #video-wrapper { display: none; position: relative; border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; background: #000; }
+    #scanner-video { width: 100%; display: block; max-height: 220px; object-fit: cover; }
+    .scan-overlay { position: absolute; top:0;left:0;right:0;bottom:0; display:flex; align-items:center; justify-content:center; pointer-events:none; }
+    .scan-frame { width: 200px; height: 110px; border: 2px solid rgba(255,255,255,0.85); border-radius: 10px; }
+    .scan-hint { position: absolute; bottom: 10px; left: 0; right: 0; text-align: center; font-size: 12px; color: rgba(255,255,255,0.75); }
+    .close-scan { position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.55);color:#fff;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;pointer-events:all; }
+
+    /* Result card */
+    .result-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 16px; }
+    .result-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 10px; }
+    .result-name { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.45; flex: 1; }
+    .badge { font-size: 11px; padding: 3px 9px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; font-weight: 500; }
+    .badge-active { background: var(--green-bg); color: var(--green-text); }
+    .badge-inactive { background: var(--red-bg); color: var(--red-text); }
+    .badge-outlet { background: var(--amber-bg); color: var(--amber-text); }
+    .meta-row { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+    .chip { font-size: 11px; padding: 3px 9px; border-radius: 20px; background: var(--bg2); color: var(--text2); display: flex; align-items: center; gap: 3px; }
+    .chip i { font-size: 12px; }
+    .restposten-banner { background: var(--amber-bg); border-radius: var(--radius); padding: 9px 12px; font-size: 12px; color: var(--amber-text); margin-bottom: 14px; display: flex; align-items: center; gap: 7px; font-weight: 500; }
+    .price-row { display: flex; gap: 10px; margin-bottom: 16px; align-items: baseline; flex-wrap: wrap; }
+    .price-main { font-size: 26px; font-weight: 700; color: var(--text); }
+    .price-uvp { font-size: 13px; color: var(--text3); text-decoration: line-through; }
+    .price-saving { font-size: 12px; padding: 3px 9px; background: var(--green-bg); color: var(--green-text); border-radius: 20px; font-weight: 600; }
+    .section-label { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 9px; }
+    .stock-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; margin-bottom: 14px; }
+    .stock-item { background: var(--bg2); border-radius: var(--radius); padding: 11px 13px; }
+    .stock-loc { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+    .stock-num { font-size: 20px; font-weight: 700; }
+    .s0 { color: var(--text3); }
+    .slow { color: var(--amber-text); }
+    .sok { color: var(--green-text); }
+    .divider-thin { height: 0.5px; background: var(--border); margin: 12px 0; }
+    .ids-row { display: flex; gap: 20px; flex-wrap: wrap; }
+    .id-block .lbl { font-size: 10px; color: var(--text3); display: block; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 2px; }
+    .id-block .val { font-size: 12px; color: var(--text2); font-family: 'SF Mono', 'Fira Code', monospace; }
+
+    /* States */
+    .error-card { background: var(--red-bg); border: 0.5px solid rgba(162,45,45,0.25); border-radius: var(--radius-lg); padding: 14px 16px; color: var(--red-text); font-size: 13px; display: flex; align-items: center; gap: 10px; }
+    .error-card i { font-size: 20px; flex-shrink: 0; }
+    .empty-state { text-align: center; padding: 40px 16px; color: var(--text3); font-size: 13px; }
+    .empty-state i { font-size: 48px; display: block; margin-bottom: 12px; opacity: 0.35; }
+    .empty-state p { line-height: 1.5; }
+
+    /* Safe area for notch phones */
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+      #app { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div class="header-icon"><i class="ti ti-scan"></i></div>
+    <div>
+      <h1>Artikelscanner</h1>
+      <p>EAN scannen oder Nummer eingeben</p>
+    </div>
+  </div>
+
+  <div class="status-bar" id="status-bar">
+    <i class="ti ti-loader s-loading spinning" id="status-icon"></i>
+    <span id="status-text">Daten werden geladen…</span>
+    <button class="reload-btn" onclick="loadData()" title="Neu laden">
+      <i class="ti ti-refresh"></i> Aktualisieren
+    </button>
+  </div>
+
+  <div class="scan-section">
+    <div id="video-wrapper">
+      <video id="scanner-video" autoplay playsinline muted></video>
+      <div class="scan-overlay">
+        <div>
+          <div class="scan-frame"></div>
+          <div class="scan-hint">Barcode in den Rahmen halten</div>
+        </div>
+      </div>
+      <button class="close-scan" onclick="stopScanner()"><i class="ti ti-x"></i></button>
+    </div>
+    <button class="scan-btn" id="scan-btn" onclick="startScanner()">
+      <i class="ti ti-camera"></i> Barcode scannen
+    </button>
+    <div class="divider">
+      <div class="divider-line"></div>
+      <span>oder manuell suchen</span>
+      <div class="divider-line"></div>
+    </div>
+    <div class="search-row">
+      <input type="text" id="search-input" placeholder="EAN oder Artikelnummer…"
+        oninput="onInput(this.value)"
+        onkeydown="if(event.key==='Enter')doSearch()"
+        inputmode="text" autocomplete="off" autocorrect="off" spellcheck="false">
+      <button onclick="doSearch()">Suchen</button>
+    </div>
+  </div>
+
+  <div id="result-area">
+    <div class="empty-state">
+      <i class="ti ti-barcode"></i>
+      <p>Barcode scannen oder<br>EAN / Artikelnummer eingeben</p>
+    </div>
+  </div>
+</div>
+
+<!-- ZXing Barcode Scanner -->
+<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.2/umd/index.min.js"></script>
+<script>
+  // ─── KONFIGURATION ────────────────────────────────────────────────────────
+  const SHEET_ID = '1qu5AvF6iWvPISBCpYUtiSjdTEqXlQrO0Qtm5-jTVZLE';
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Sheet1`;
+
+  let DATA = [];
+  let codeReader = null;
+  let scanActive = false;
+
+  // Status-Anzeige
+  function setStatus(type, text) {
+    const icon = document.getElementById('status-icon');
+    document.getElementById('status-text').textContent = text;
+    icon.className = 'ti ';
+    if (type === 'loading') icon.className += 'ti-loader s-loading spinning';
+    else if (type === 'ok')  icon.className += 'ti-circle-check s-ok';
+    else                     icon.className += 'ti-alert-circle s-error';
+  }
+
+  // CSV-Parser (robust gegen Kommas in Anführungszeichen)
+  function parseCSV(csv) {
+    const lines = csv.trim().split('\n');
+    const headers = splitCSVLine(lines[0]).map(h => h.replace(/^"|"$/g, '').trim());
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+      const vals = splitCSVLine(lines[i]);
+      if (!vals.length) continue;
+      const row = {};
+      headers.forEach((h, j) => row[h] = (vals[j] || '').replace(/^"|"$/g, '').trim());
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  function splitCSVLine(line) {
+    const result = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') { inQ = !inQ; }
+      else if (c === ',' && !inQ) { result.push(cur); cur = ''; }
+      else { cur += c; }
+    }
+    result.push(cur);
+    return result;
+  }
+
+  // Daten von Google Sheets laden
+  async function loadData() {
+    setStatus('loading', 'Daten werden geladen…');
+    document.getElementById('scan-btn').disabled = true;
+    try {
+      const res = await fetch(SHEET_URL);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const text = await res.text();
+      DATA = parseCSV(text).filter(r => r.ARTIKELNR && r.ARTIKELNR.length > 0);
+      const time = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      setStatus('ok', `${DATA.length} Artikel geladen · ${time}`);
+      document.getElementById('scan-btn').disabled = false;
+    } catch (e) {
+      setStatus('error', 'Ladefehler — Tabelle öffentlich freigegeben?');
+      document.getElementById('scan-btn').disabled = false;
+      console.error(e);
+    }
+  }
+
+  // Artikel suchen (EAN oder Artikelnummer)
+  function findArticle(query) {
+    const q = query.trim().toLowerCase();
+    return DATA.find(r =>
+      r.EAN === q ||
+      r.ARTIKELNR.toLowerCase() === q
+    );
+  }
+
+  // Bestandsfarbe
+  function stockColor(n) {
+    if (n === 0) return 's0';
+    if (n <= 1)  return 'slow';
+    return 'sok';
+  }
+
+  // Artikel-Karte rendern
+  function renderResult(item) {
+    const isRestposten = (item.Restposten || '').toUpperCase() === 'JA';
+    const isActive     = (item.Status || '').toUpperCase() === 'JA';
+    const statusLabel  = isRestposten ? 'Restposten' : (isActive ? 'Aktiv' : 'Inaktiv');
+    const statusClass  = isRestposten ? 'badge-outlet' : (isActive ? 'badge-active' : 'badge-inactive');
+
+    const preis = parseFloat((item.PREIS || '0').replace(',', '.')) || 0;
+    const uvp   = parseFloat((item.UVP   || '0').replace(',', '.')) || 0;
+    const savingPct = (uvp > preis && preis > 0) ? Math.round((1 - preis / uvp) * 100) : 0;
+
+    // Kategorie-Text bereinigen (z.B. "10102010 - Geräteflossen" → "Geräteflossen")
+    const kat = (item.KATEGORIE || '').replace(/^\d+ - /, '');
+    const marke = (item.MARKE || '').split(' - ')[0]; // nur erster Teil
+
+    const locs = [
+      { name: 'Coppi',        val: parseInt(item.Coppi)       || 0 },
+      { name: 'Zentrallager', val: parseInt(item.Zentrallager)|| 0 },
+      { name: 'Steglitz',     val: parseInt(item.Steglitz)    || 0 },
+      { name: 'Freiburg',     val: parseInt(item.Freiburg)    || 0 },
+      { name: 'Hamburg',      val: parseInt(item.Hamburg)     || 0 },
+    ];
+    const total = locs.reduce((s, l) => s + l.val, 0);
+
+    document.getElementById('result-area').innerHTML = `
+      <div class="result-card">
+        <div class="result-header">
+          <div class="result-name">${escHtml(item.NAME || 'Unbekannter Artikel')}</div>
+          <span class="badge ${statusClass}">${statusLabel}</span>
+        </div>
+
+        ${isRestposten ? `
+          <div class="restposten-banner">
+            <i class="ti ti-tag"></i> Restposten — reduzierter Abverkauf
+          </div>` : ''}
+
+        <div class="meta-row">
+          ${kat   ? `<span class="chip"><i class="ti ti-category"></i>${escHtml(kat)}</span>` : ''}
+          ${marke ? `<span class="chip"><i class="ti ti-building-store"></i>${escHtml(marke)}</span>` : ''}
+          <span class="chip"><i class="ti ti-package"></i>Gesamt: ${total}</span>
+        </div>
+
+        <div class="price-row">
+          ${preis > 0
+            ? `<span class="price-main">€&nbsp;${preis.toFixed(2).replace('.', ',')}</span>`
+            : `<span class="price-main" style="font-size:16px;color:var(--text3)">Kein Preis hinterlegt</span>`}
+          ${uvp > preis && preis > 0
+            ? `<span class="price-uvp">UVP&nbsp;€&nbsp;${uvp.toFixed(2).replace('.', ',')}</span>` : ''}
+          ${savingPct > 0
+            ? `<span class="price-saving">-${savingPct}&nbsp;%</span>` : ''}
+        </div>
+
+        <div class="section-label">Bestand nach Standort</div>
+        <div class="stock-grid">
+          ${locs.map(l => `
+            <div class="stock-item">
+              <div class="stock-loc">${l.name}</div>
+              <div class="stock-num ${stockColor(l.val)}">${l.val}</div>
+            </div>`).join('')}
+        </div>
+
+        <div class="divider-thin"></div>
+        <div class="ids-row">
+          <div class="id-block">
+            <span class="lbl">Artikelnr.</span>
+            <span class="val">${escHtml(item.ARTIKELNR)}</span>
+          </div>
+          ${item.EAN ? `
+          <div class="id-block">
+            <span class="lbl">EAN</span>
+            <span class="val">${escHtml(item.EAN)}</span>
+          </div>` : ''}
+        </div>
+      </div>`;
+  }
+
+  function showError(msg) {
+    document.getElementById('result-area').innerHTML = `
+      <div class="error-card">
+        <i class="ti ti-alert-circle"></i>
+        <span>${escHtml(msg)}</span>
+      </div>`;
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // Manuelle Suche
+  function doSearch() {
+    const q = document.getElementById('search-input').value;
+    if (!q.trim()) return;
+    if (!DATA.length) { showError('Daten noch nicht geladen. Bitte warten oder Aktualisieren tippen.'); return; }
+    const item = findArticle(q);
+    if (item) renderResult(item);
+    else showError('Kein Artikel gefunden für: ' + q);
+  }
+
+  // Live-Suche ab 6 Zeichen
+  function onInput(val) {
+    if (val.length >= 6 && DATA.length > 0) {
+      const item = findArticle(val);
+      if (item) renderResult(item);
+    }
+  }
+
+  // Barcode-Scanner starten
+  async function startScanner() {
+    const vw  = document.getElementById('video-wrapper');
+    const btn = document.getElementById('scan-btn');
+    vw.style.display = 'block';
+    btn.style.display = 'none';
+    scanActive = true;
+
+    try {
+      if (typeof ZXing === 'undefined') throw new Error('ZXing nicht geladen');
+      codeReader = new ZXing.BrowserMultiFormatReader();
+      const devices   = await ZXing.BrowserMultiFormatReader.listVideoInputDevices();
+      // Rückkamera bevorzugen (letztes Gerät auf Smartphones)
+      const deviceId  = devices.length > 1 ? devices[devices.length - 1].deviceId : devices[0]?.deviceId;
+
+      await codeReader.decodeFromVideoDevice(deviceId, 'scanner-video', (result, err) => {
+        if (result && scanActive) {
+          scanActive = false;
+          const code = result.getText();
+          stopScanner();
+          document.getElementById('search-input').value = code;
+          const item = findArticle(code);
+          if (item) renderResult(item);
+          else showError('EAN ' + code + ' nicht in der Datenbank gefunden.');
+        }
+      });
+    } catch (e) {
+      stopScanner();
+      if (e.name === 'NotAllowedError') {
+        showError('Kamera-Zugriff verweigert. Bitte in den Browser-Einstellungen erlauben.');
+      } else {
+        showError('Kamera nicht verfügbar. Bitte manuell eingeben.');
+      }
+      console.error(e);
+    }
+  }
+
+  // Scanner stoppen
+  function stopScanner() {
+    scanActive = false;
+    if (codeReader) { try { codeReader.reset(); } catch(e){} codeReader = null; }
+    const video = document.getElementById('scanner-video');
+    if (video.srcObject) {
+      video.srcObject.getTracks().forEach(t => t.stop());
+      video.srcObject = null;
+    }
+    document.getElementById('video-wrapper').style.display = 'none';
+    document.getElementById('scan-btn').style.display    = 'flex';
+  }
+
+  // Beim Laden sofort Daten holen
+  loadData();
+</script>
+</body>
+</html>
