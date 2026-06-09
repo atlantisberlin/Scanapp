@@ -158,6 +158,20 @@
     .id-block .lbl { font-size: 10px; color: var(--text3); display: block; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 2px; }
     .id-block .val { font-size: 12px; color: var(--text2); font-family: 'SF Mono', 'Fira Code', monospace; }
 
+    /* Suchergebnisliste */
+    .results-list { display: flex; flex-direction: column; gap: 6px; }
+    .results-header { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 4px; }
+    .result-row { display: flex; align-items: center; gap: 10px; padding: 10px 13px; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); cursor: pointer; text-align: left; width: 100%; transition: background 0.1s; }
+    .result-row:active { background: var(--bg2); }
+    .result-row-img { width: 44px; height: 44px; border-radius: var(--radius); background: var(--bg2); flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    .result-row-img img { width: 100%; height: 100%; object-fit: contain; padding: 3px; }
+    .result-row-img i { font-size: 20px; color: var(--text3); opacity: 0.4; }
+    .result-row-info { flex: 1; min-width: 0; }
+    .result-row-name { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.35; }
+    .result-row-name em { font-style: normal; color: var(--blue); }
+    .result-row-sub { font-size: 11px; color: var(--text3); margin-top: 2px; font-family: 'SF Mono','Fira Code',monospace; }
+    .result-row-stock { font-size: 12px; font-weight: 700; flex-shrink: 0; }
+
     /* Master / Varianten */
     .variants-section { margin-top: 12px; }
     .variants-label { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; }
@@ -338,13 +352,75 @@
     }
   }
 
-  // Artikel suchen (EAN oder Artikelnummer)
+  // Exakte Suche (EAN oder Artikelnummer) — für Scanner
   function findArticle(query) {
     const q = query.trim().toLowerCase();
     return DATA.find(r =>
       r.EAN === q ||
       r.ARTIKELNR.toLowerCase() === q
     );
+  }
+
+  // Volltextsuche — EAN, Artikelnummer, Name (Teilbegriff)
+  function searchArticles(query) {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    return DATA.filter(r =>
+      r.EAN === q ||
+      r.ARTIKELNR.toLowerCase() === q ||
+      r.ARTIKELNR.toLowerCase().includes(q) ||
+      (r.NAME || '').toLowerCase().includes(q)
+    ).slice(0, 50); // max 50 Treffer
+  }
+
+  // Treffer-Liste rendern
+  function renderList(items, query) {
+    const q = query.trim().toLowerCase();
+    const STOCK_KEYS = ['Coppi','Steglitz','Zentrallager','Freiburg','Hamburg'];
+    const total = r => STOCK_KEYS.reduce((s,k) => s + (parseInt(r[k])||0), 0);
+    const sc = n => n === 0 ? 's0' : n <= 1 ? 'slow' : 'sok';
+
+    // Highlight matching text
+    function hl(text) {
+      if (!q) return escHtml(text);
+      const idx = text.toLowerCase().indexOf(q);
+      if (idx === -1) return escHtml(text);
+      return escHtml(text.slice(0, idx))
+        + '<em>' + escHtml(text.slice(idx, idx + q.length)) + '</em>'
+        + escHtml(text.slice(idx + q.length));
+    }
+
+    const rows = items.map(item => {
+      const stk = total(item);
+      const img = (item.BILD_URL || '').trim();
+      const hasImg = img && img !== 'default.jpg';
+      const imgHtml = hasImg
+        ? `<img src="https://www.atlantiscloud.de/images/products/mini/${escHtml(img)}" alt="" onerror="this.style.display='none';this.parentNode.innerHTML='<i class=\'ti ti-photo-off\'></i>'">`
+        : '<i class="ti ti-photo-off"></i>';
+      return `<button class="result-row" onclick="selectResult('${item.ARTIKELNR.replace(/'/g,"\'")}')">
+        <div class="result-row-img">${imgHtml}</div>
+        <div class="result-row-info">
+          <div class="result-row-name">${hl(item.NAME || item.ARTIKELNR)}</div>
+          <div class="result-row-sub">${escHtml(item.ARTIKELNR)}</div>
+        </div>
+        <span class="result-row-stock ${sc(stk)}">${stk} Stk.</span>
+      </button>`;
+    }).join('');
+
+    document.getElementById('result-area').innerHTML = `
+      <div class="results-list">
+        <div class="results-header">${items.length} Treffer für „${escHtml(query)}"</div>
+        ${rows}
+      </div>`;
+  }
+
+  function selectResult(artikelnr) {
+    const item = findArticle(artikelnr);
+    if (item) {
+      document.getElementById('search-input').value = artikelnr;
+      renderResult(item);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
   // Bestandsfarbe
@@ -595,19 +671,34 @@
 
   // Manuelle Suche
   function doSearch() {
-    const q = document.getElementById('search-input').value;
-    if (!q.trim()) return;
+    const q = document.getElementById('search-input').value.trim();
+    if (!q) return;
     if (!DATA.length) { showError('Daten noch nicht geladen. Bitte warten oder Aktualisieren tippen.'); return; }
-    const item = findArticle(q);
-    if (item) renderResult(item);
+    // Exakte Übereinstimmung → direkt anzeigen
+    const exact = findArticle(q);
+    if (exact) { renderResult(exact); return; }
+    // Sonst Volltextsuche
+    const results = searchArticles(q);
+    if (results.length === 1) renderResult(results[0]);
+    else if (results.length > 1) renderList(results, q);
     else showError('Kein Artikel gefunden für: ' + q);
   }
 
-  // Live-Suche ab 6 Zeichen
+  // Live-Suche
   function onInput(val) {
-    if (val.length >= 6 && DATA.length > 0) {
-      const item = findArticle(val);
-      if (item) renderResult(item);
+    const q = val.trim();
+    if (!DATA.length) return;
+    if (q.length < 3) return;
+    // Exakt ab 6 Zeichen
+    if (q.length >= 6) {
+      const exact = findArticle(q);
+      if (exact) { renderResult(exact); return; }
+    }
+    // Volltextsuche ab 3 Zeichen
+    if (q.length >= 3) {
+      const results = searchArticles(q);
+      if (results.length === 1) renderResult(results[0]);
+      else if (results.length > 1 && results.length <= 50) renderList(results, q);
     }
   }
 
