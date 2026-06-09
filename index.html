@@ -106,6 +106,17 @@
     .scan-hint { position: absolute; bottom: 10px; left: 0; right: 0; text-align: center; font-size: 12px; color: rgba(255,255,255,0.75); }
     .close-scan { position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.55);color:#fff;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;pointer-events:all; }
 
+    /* Main article top layout */
+    .article-top-row { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
+    .article-img-col { flex-shrink: 0; width: 110px; height: 110px; border-radius: var(--radius); overflow: hidden; background: var(--bg2); display: flex; align-items: center; justify-content: center; }
+    .article-img-col img { width: 100%; height: 100%; object-fit: contain; padding: 6px; display: block; }
+    .article-img-col .img-placeholder { color: var(--text3); display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px; text-align: center; }
+    .article-img-col .img-placeholder i { font-size: 28px; opacity: 0.35; }
+    .article-img-col .img-placeholder span { font-size: 11px; }
+    .article-meta-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+    .article-artikelnr { font-size: 12px; font-family: 'SF Mono','Fira Code',monospace; color: var(--text2); }
+    .article-ean { font-size: 11px; color: var(--text3); font-family: 'SF Mono','Fira Code',monospace; }
+
     /* Product image */
     .product-img-wrap { width: 100%; border-radius: var(--radius); overflow: hidden; background: var(--bg2); margin-bottom: 14px; display: flex; align-items: center; justify-content: center; min-height: 160px; }
     .product-img-wrap img { width: 100%; max-height: 220px; object-fit: contain; display: block; padding: 12px; }
@@ -338,10 +349,11 @@
 
   // Artikel-Karte rendern
   function renderResult(item) {
-    const isRestposten = (item.Restposten || '').toUpperCase() === 'JA';
-    const isActive     = (item.Status || '').toUpperCase() === 'JA';
-    const statusLabel  = isRestposten ? 'Restposten' : (isActive ? 'Aktiv' : 'Inaktiv');
-    const statusClass  = isRestposten ? 'badge-outlet' : (isActive ? 'badge-active' : 'badge-inactive');
+    const isRestposten = (item.Restposten || '').trim().toUpperCase() === 'JA';
+    const isActive     = (item.Status || '').trim().toUpperCase() === 'JA';
+    // Status-Badge: nur Aktiv/Inaktiv — Restposten wird separat als Banner angezeigt
+    const statusLabel  = isActive ? 'Aktiv' : 'Inaktiv';
+    const statusClass  = isActive ? 'badge-active' : 'badge-inactive';
 
     const preis = parseFloat((item.PREIS || '0').replace(',', '.')) || 0;
     const uvp   = parseFloat((item.UVP   || '0').replace(',', '.')) || 0;
@@ -364,40 +376,60 @@
     const total = locs.reduce((s, l) => s + l.val, 0);
     const extraTotal = extraLocs.reduce((s, l) => s + l.val, 0);
 
+    const hasImg = item.BILD_URL && item.BILD_URL.trim() !== '' && item.BILD_URL !== 'default.jpg';
+    const imgSrc  = hasImg ? `https://www.atlantiscloud.de/images/products/normal/${item.BILD_URL.trim()}` : '';
+    const atlosUrl = (item.ATLOS_URL || '').trim();
+
     document.getElementById('result-area').innerHTML = `
       <div class="result-card">
-        ${(item.BILD_URL && item.BILD_URL.trim() !== '' && item.BILD_URL !== 'default.jpg') ? `
-        <div class="product-img-wrap">
-          <img src="https://www.atlantiscloud.de/images/products/normal/${item.BILD_URL.trim()}"
-               alt="Produktbild"
-               onerror="this.parentNode.innerHTML='<div class=\'img-placeholder\'><i class=\'ti ti-photo-off\'></i><span>Kein Bild verfügbar</span></div>'">
-        </div>` : ''}
-        <div class="result-header">
+
+        <!-- 1. Artikelname + Status-Badge -->
+        <div class="result-header" style="margin-bottom:12px">
           <div class="result-name">${escHtml(item.NAME || 'Unbekannter Artikel')}</div>
           <span class="badge ${statusClass}">${statusLabel}</span>
         </div>
 
+        <!-- 2. Restposten-Banner (nur wenn JA) -->
         ${isRestposten ? `
-          <div class="restposten-banner">
+          <div class="restposten-banner" style="margin-bottom:12px">
             <i class="ti ti-tag"></i> Restposten — reduzierter Abverkauf
           </div>` : ''}
 
-        <div class="meta-row">
-          ${kat   ? `<span class="chip"><i class="ti ti-category"></i>${escHtml(kat)}</span>` : ''}
-          ${marke ? `<span class="chip"><i class="ti ti-building-store"></i>${escHtml(marke)}</span>` : ''}
-          <span class="chip"><i class="ti ti-package"></i>Gesamt: ${total}</span>
+        <!-- 3. Bild links, Artikelnr + EAN + Preis rechts -->
+        <div class="article-top-row">
+          <div class="article-img-col">
+            ${hasImg
+              ? `<img src="${escHtml(imgSrc)}" alt="Produktbild"
+                   onerror="this.parentNode.innerHTML='<div class=\'img-placeholder\'><i class=\'ti ti-photo-off\'></i><span>Kein Bild</span></div>'">`
+              : '<div class="img-placeholder"><i class="ti ti-photo-off"></i><span>Kein Bild</span></div>'}
+          </div>
+          <div class="article-meta-col">
+            <div>
+              <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px">Artikelnr.</div>
+              <div class="article-artikelnr">${escHtml(item.ARTIKELNR)}</div>
+            </div>
+            ${item.EAN ? `<div>
+              <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px">EAN</div>
+              <div class="article-ean">${escHtml(item.EAN)}</div>
+            </div>` : ''}
+            <div class="price-row" style="margin-bottom:0">
+              ${preis > 0
+                ? `<span class="price-main" style="font-size:20px">€&nbsp;${preis.toFixed(2).replace('.', ',')}</span>`
+                : `<span class="price-main" style="font-size:14px;color:var(--text3)">Kein Preis</span>`}
+              ${uvp > preis && preis > 0
+                ? `<span class="price-uvp">UVP&nbsp;€&nbsp;${uvp.toFixed(2).replace('.', ',')}</span>` : ''}
+              ${savingPct > 0
+                ? `<span class="price-saving">-${savingPct}&nbsp;%</span>` : ''}
+            </div>
+            <div class="meta-row" style="margin-bottom:0">
+              ${kat   ? `<span class="chip"><i class="ti ti-category"></i>${escHtml(kat)}</span>` : ''}
+              ${marke ? `<span class="chip"><i class="ti ti-building-store"></i>${escHtml(marke)}</span>` : ''}
+              <span class="chip"><i class="ti ti-package"></i>Gesamt: ${total}</span>
+            </div>
+          </div>
         </div>
 
-        <div class="price-row">
-          ${preis > 0
-            ? `<span class="price-main">€&nbsp;${preis.toFixed(2).replace('.', ',')}</span>`
-            : `<span class="price-main" style="font-size:16px;color:var(--text3)">Kein Preis hinterlegt</span>`}
-          ${uvp > preis && preis > 0
-            ? `<span class="price-uvp">UVP&nbsp;€&nbsp;${uvp.toFixed(2).replace('.', ',')}</span>` : ''}
-          ${savingPct > 0
-            ? `<span class="price-saving">-${savingPct}&nbsp;%</span>` : ''}
-        </div>
-
+        <!-- 4. Bestand nach Standort -->
         <div class="section-label">Bestand nach Standort</div>
         <div class="stock-grid">
           ${mainLocs.map(l => `
@@ -420,18 +452,6 @@
           </div>
         </details>
 
-        <div class="divider-thin"></div>
-        <div class="ids-row">
-          <div class="id-block">
-            <span class="lbl">Artikelnr.</span>
-            <span class="val">${escHtml(item.ARTIKELNR)}</span>
-          </div>
-          ${item.EAN ? `
-          <div class="id-block">
-            <span class="lbl">EAN</span>
-            <span class="val">${escHtml(item.EAN)}</span>
-          </div>` : ''}
-        </div>
         ${buildVariantsHTML(item)}
       </div>`;
   }
