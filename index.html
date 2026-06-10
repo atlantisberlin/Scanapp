@@ -453,6 +453,8 @@
 
     const rows = items.map(item => {
       const stk = total(item);
+      const locStk = currentLocation ? (parseInt(item[currentLocation]) || 0) : stk;
+      const locLabel = currentLocation ? currentLocation : 'Gesamt';
       const img = (item.BILD_URL || '').trim();
       const hasImg = img && img !== 'default.jpg';
       const imgHtml = hasImg
@@ -466,7 +468,10 @@
           <div class="result-row-sub">${escHtml(item.ARTIKELNR)}</div>
           ${hasAktion ? `<div style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;font-size:11px;font-weight:700;color:#E65100;background:#FFE69C;border:1px solid #FFCA28;border-radius:20px;padding:2px 8px"><i class="ti ti-bolt" style="font-size:11px"></i> ${escHtml(item.Aktionsangebot.trim())}</div>` : ''}
         </div>
-        <span class="result-row-stock ${sc(stk)}">${stk} Stk.</span>
+        <div style="text-align:right;flex-shrink:0">
+          <span class="result-row-stock ${sc(locStk)}">${locStk} Stk.</span>
+          ${currentLocation ? `<div style="font-size:10px;color:var(--text3);margin-top:1px">${locLabel}</div>` : ''}
+        </div>
       </button>`;
     }).join('');
 
@@ -662,6 +667,9 @@
 
       const vStatusRaw = (s.Status || '').trim();
       const vIsActive  = vStatusRaw.toUpperCase() === 'JA';
+      const vLocStk   = currentLocation ? (parseInt(s[currentLocation]) || 0) : stk;
+      const vLocLabel = currentLocation || 'Gesamt';
+      const vLocScs   = vLocStk === 0 ? 's0' : vLocStk <= 1 ? 'slow' : 'sok';
       return `<details class="variant-details" open>
         <summary class="variant-summary">
           <span class="variant-summary-left">
@@ -672,7 +680,10 @@
               ${(s.Aktionsangebot && s.Aktionsangebot.trim()) ? `<span class="aktion-chip"><i class="ti ti-bolt" style="font-size:10px"></i> Aktion</span>` : ''}
             </span>
           </span>
-          <span class="variant-stock ${scs}">${stk} Stk.</span>
+          <div style="text-align:right;flex-shrink:0">
+            <span class="variant-stock ${vLocScs}">${vLocStk} Stk.</span>
+            ${currentLocation ? `<div style="font-size:10px;color:var(--text3);margin-top:1px">${vLocLabel}</div>` : ''}
+          </div>
           <i class="ti ti-chevron-down variant-chevron" aria-hidden="true"></i>
         </summary>
         <div class="variant-body">
