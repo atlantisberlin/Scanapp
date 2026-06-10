@@ -154,6 +154,34 @@
     .id-block .lbl { font-size: 10px; color: var(--text3); display: block; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 2px; }
     .id-block .val { font-size: 12px; color: var(--text2); font-family: 'SF Mono', 'Fira Code', monospace; }
 
+    /* Aktionen-Banner & Übersicht */
+    .aktionen-banner { display: flex; align-items: center; gap: 10px; background: linear-gradient(135deg, #FFF3CD, #FFE069); border: 1.5px solid #FFCA28; border-radius: var(--radius); padding: 12px 14px; margin-bottom: 14px; cursor: pointer; transition: opacity 0.15s; }
+    .aktionen-banner:active { opacity: 0.85; }
+    .aktionen-banner-icon { font-size: 24px; flex-shrink: 0; }
+    .aktionen-banner-text { flex: 1; }
+    .aktionen-banner-title { font-size: 14px; font-weight: 700; color: #E65100; }
+    .aktionen-banner-sub { font-size: 12px; color: #5D3A00; margin-top: 2px; }
+    .aktionen-banner-arrow { font-size: 18px; color: #E65100; flex-shrink: 0; }
+    /* Aktionen Modal */
+    .aktionen-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 200; display: flex; flex-direction: column; }
+    .aktionen-modal.hidden { display: none; }
+    .aktionen-sheet { background: var(--bg); flex: 1; margin-top: 60px; border-radius: var(--radius-lg) var(--radius-lg) 0 0; display: flex; flex-direction: column; overflow: hidden; }
+    .aktionen-sheet-header { display: flex; align-items: center; justify-content: space-between; padding: 16px; border-bottom: 0.5px solid var(--border); flex-shrink: 0; }
+    .aktionen-sheet-header h2 { font-size: 16px; font-weight: 700; color: var(--text); }
+    .aktionen-sheet-header .close-modal { background: var(--bg2); border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; color: var(--text2); }
+    .aktionen-sheet-body { overflow-y: auto; padding: 12px; flex: 1; -webkit-overflow-scrolling: touch; }
+    .aktion-list-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; cursor: pointer; width: 100%; text-align: left; transition: background 0.1s; }
+    .aktion-list-item:active { background: var(--bg2); }
+    .aktion-list-img { width: 48px; height: 48px; border-radius: var(--radius); background: var(--bg2); flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    .aktion-list-img img { width: 100%; height: 100%; object-fit: contain; padding: 3px; }
+    .aktion-list-info { flex: 1; min-width: 0; }
+    .aktion-list-name { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.35; }
+    .aktion-list-nr { font-size: 11px; color: var(--text3); font-family: monospace; margin-top: 1px; }
+    .aktion-list-tag { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #E65100; background: #FFE69C; border: 1px solid #FFCA28; border-radius: 20px; padding: 2px 7px; margin-top: 4px; }
+    .aktion-list-stock { text-align: right; flex-shrink: 0; }
+    .aktion-list-stk { font-size: 14px; font-weight: 700; }
+    .aktion-list-loc { font-size: 10px; color: var(--text3); margin-top: 1px; }
+
     /* Kopieren-Button */
     .copy-btn { background: none; border: none; cursor: pointer; color: var(--text3); padding: 2px 4px; border-radius: 4px; font-size: 14px; vertical-align: middle; transition: color 0.15s; }
     .copy-btn:active { color: var(--blue); }
@@ -280,6 +308,16 @@
     <button class="change-btn">Ändern</button>
   </div>
 
+  <!-- Aktionsangebote Banner (nur Coppi) -->
+  <div id="aktionen-banner" style="display:none" class="aktionen-banner" onclick="openAktionenModal()">
+    <span class="aktionen-banner-icon">⚡</span>
+    <div class="aktionen-banner-text">
+      <div class="aktionen-banner-title">Aktuelle Aktionsangebote</div>
+      <div class="aktionen-banner-sub" id="aktionen-banner-sub">Artikel mit Sonderpreisen anzeigen</div>
+    </div>
+    <i class="ti ti-chevron-right aktionen-banner-arrow"></i>
+  </div>
+
   <div class="scan-section">
     <div id="video-wrapper">
       <div id="qr-reader"></div>
@@ -307,6 +345,17 @@
       <i class="ti ti-barcode"></i>
       <p>Barcode scannen oder<br>EAN / Artikelnummer eingeben</p>
     </div>
+  </div>
+</div>
+
+<!-- Aktionsangebote Modal -->
+<div class="aktionen-modal hidden" id="aktionen-modal">
+  <div class="aktionen-sheet">
+    <div class="aktionen-sheet-header">
+      <h2>⚡ Aktionsangebote</h2>
+      <button class="close-modal" onclick="document.getElementById('aktionen-modal').classList.add('hidden')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="aktionen-sheet-body" id="aktionen-list"></div>
   </div>
 </div>
 
@@ -402,6 +451,7 @@
       DATA = parseCSV(text).filter(r => r.ARTIKELNR && r.ARTIKELNR.length > 0);
       const time = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
       setStatus('ok', `${DATA.length} Artikel geladen · ${time}`);
+      updateAktionenBanner();
       document.getElementById('scan-btn').disabled = false;
     } catch (e) {
       setStatus('error', 'Ladefehler — Tabelle öffentlich freigegeben?');
@@ -939,6 +989,67 @@
     const label = document.getElementById('location-label');
     bar.style.display = 'flex';
     label.textContent = currentLocation ? 'Mein Standort: ' + currentLocation : 'Alle Standorte';
+    updateAktionenBanner();
+  }
+
+  function updateAktionenBanner() {
+    const banner = document.getElementById('aktionen-banner');
+    const sub    = document.getElementById('aktionen-banner-sub');
+    // Banner für alle Standorte anzeigen (wenn Standort gewählt)
+    if (currentLocation && DATA.length > 0) {
+      const aktionen = DATA.filter(r => r.Aktionsangebot && r.Aktionsangebot.trim());
+      if (aktionen.length > 0) {
+        banner.style.display = 'flex';
+        sub.textContent = aktionen.length + ' Artikel mit Sonderpreisen';
+      } else {
+        banner.style.display = 'none';
+      }
+    } else {
+      banner.style.display = 'none';
+    }
+  }
+
+  function openAktionenModal() {
+    const aktionen = DATA.filter(r => r.Aktionsangebot && r.Aktionsangebot.trim())
+      .sort((a,b) => (a.NAME||'').localeCompare(b.NAME||'', 'de'));
+    const STOCK_KEYS = ['Coppi','Steglitz','Zentrallager','Freiburg','Hamburg'];
+    const sc = n => n === 0 ? 's0' : n <= 1 ? 'slow' : 'sok';
+
+    const html = aktionen.map(item => {
+      const locStk   = currentLocation ? (parseInt(item[currentLocation]) || 0) : STOCK_KEYS.reduce((s,k)=>s+(parseInt(item[k])||0),0);
+      const locLabel = currentLocation || 'Gesamt';
+      const img      = (item.BILD_URL || '').trim();
+      const hasImg   = img && img !== 'default.jpg';
+      return `<button class="aktion-list-item" onclick="selectFromAktionen('${item.ARTIKELNR.replace(/'/g,"\'")}')">
+        <div class="aktion-list-img">
+          ${hasImg
+            ? `<img src="https://www.atlantiscloud.de/images/products/mini/${img}" alt="" onerror="this.style.display='none'">`
+            : '<i class="ti ti-photo-off" style="font-size:20px;color:var(--text3);opacity:0.4"></i>'}
+        </div>
+        <div class="aktion-list-info">
+          <div class="aktion-list-name">${escHtml(item.NAME || item.ARTIKELNR)}</div>
+          <div class="aktion-list-nr">${escHtml(item.ARTIKELNR)}</div>
+          <div class="aktion-list-tag"><i class="ti ti-bolt" style="font-size:10px"></i> ${escHtml(item.Aktionsangebot.trim())}</div>
+        </div>
+        <div class="aktion-list-stock">
+          <div class="aktion-list-stk ${sc(locStk)}">${locStk} Stk.</div>
+          <div class="aktion-list-loc">${locLabel}</div>
+        </div>
+      </button>`;
+    }).join('');
+
+    document.getElementById('aktionen-list').innerHTML = html || '<p style="text-align:center;color:var(--text3);padding:32px">Keine Aktionsangebote gefunden</p>';
+    document.getElementById('aktionen-modal').classList.remove('hidden');
+  }
+
+  function selectFromAktionen(artikelnr) {
+    document.getElementById('aktionen-modal').classList.add('hidden');
+    const item = findArticle(artikelnr);
+    if (item) {
+      document.getElementById('search-input').value = artikelnr;
+      renderResult(item);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
   function selectLoc(btn) {
