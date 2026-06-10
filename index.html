@@ -286,7 +286,7 @@ const FIELD_MAP={
   'freiburg':'Freiburg','hamburg':'Hamburg','master_slave':'MASTER_SLAVE',
   'uvp':'UVP','marke':'MARKE','kategorie':'KATEGORIE','bild_url':'BILD_URL',
   'status':'Status','restposten':'Restposten','atlos_url':'ATLOS_URL',
-  'master_model':'MASTER_MODEL','aktionsangebot':'Aktionsangebot'
+  'master_model':'MASTER_MODEL','aktionsangebot coppi':'AktionCoppi','aktionsangebot zentrallager':'AktionZentrallager','aktionsangebot steglitz':'AktionSteglitz','aktionsangebot freiburg':'AktionFreiburg','aktionsangebot hamburg':'AktionHamburg','aktionsangebot':'Aktionsangebot'
 };
 
 function parseCSV(csv){
@@ -313,6 +313,18 @@ function splitCSVLine(line){
   }
   result.push(cur);
   return result;
+}
+
+function getAktion(item){
+  const map={
+    'Coppi':'AktionCoppi','Steglitz':'AktionSteglitz',
+    'Zentrallager':'AktionZentrallager','Freiburg':'AktionFreiburg','Hamburg':'AktionHamburg'
+  };
+  // Use location-specific field if available, fall back to generic
+  const locField = currentLocation && map[currentLocation] ? map[currentLocation] : null;
+  const locVal = locField && item[locField] ? item[locField].trim() : '';
+  const genVal = item.Aktionsangebot ? item.Aktionsangebot.trim() : '';
+  return locVal || genVal;
 }
 
 async function loadData(){
@@ -364,13 +376,13 @@ function renderList(items,query){
     const img=(item.BILD_URL||'').trim();
     const hasImg=img&&img!=='default.jpg';
     const imgHtml=hasImg?`<img src="https://www.atlantiscloud.de/images/products/mini/${escHtml(img)}" alt="" onerror="this.style.display='none';this.parentNode.innerHTML='<i class=\\'ti ti-photo-off\\'></i>'">`:'<i class="ti ti-photo-off"></i>';
-    const hasAktion=item.Aktionsangebot&&item.Aktionsangebot.trim();
+    const hasAktion=getAktion(item);
     return `<button class="result-row" onclick="selectResult('${item.ARTIKELNR.replace(/'/g,"\\'")}')">
       <div class="result-row-img">${imgHtml}</div>
       <div class="result-row-info">
         <div class="result-row-name">${hl(item.NAME||item.ARTIKELNR)}</div>
         <div class="result-row-sub">${escHtml(item.ARTIKELNR)}</div>
-        ${hasAktion?`<div style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;font-size:11px;font-weight:700;color:#E65100;background:#FFE69C;border:1px solid #FFCA28;border-radius:20px;padding:2px 8px"><i class="ti ti-bolt" style="font-size:11px"></i> ${escHtml(item.Aktionsangebot.trim())}</div>`:''}
+        ${hasAktion?`<div style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;font-size:11px;font-weight:700;color:#E65100;background:#FFE69C;border:1px solid #FFCA28;border-radius:20px;padding:2px 8px"><i class="ti ti-bolt" style="font-size:11px"></i> ${escHtml(getAktion(item))}</div>`:''}
       </div>
       <div style="text-align:right;flex-shrink:0">
         <span style="font-size:13px;font-weight:700" class="${sc(locStk)}">${locStk} Stk.</span>
@@ -415,12 +427,12 @@ function renderResult(item){
         <span class="badge ${statusClass}">${isActive?'Aktiv':'Inaktiv'}</span>
       </div>
       ${isRestposten?`<div class="restposten-banner" style="margin-bottom:12px"><i class="ti ti-tag"></i> Restposten — reduzierter Abverkauf</div>`:''}
-      ${(item.Aktionsangebot&&item.Aktionsangebot.trim())?`
+      ${getAktion(item)?`
       <div class="aktion-banner">
         <i class="ti ti-bolt"></i>
         <div class="aktion-banner-text">
           <div class="aktion-banner-label">⚡ Aktionsangebot</div>
-          <div class="aktion-banner-msg">${escHtml(item.Aktionsangebot.trim())}</div>
+          <div class="aktion-banner-msg">${escHtml(getAktion(item))}</div>
         </div>
       </div>`:''}
       <div class="article-top-row">
@@ -496,7 +508,7 @@ function buildVariantsHTML(item){
           <span style="display:inline-flex;gap:4px;margin-top:2px;flex-wrap:wrap">
             <span class="badge ${vIsActive?'badge-active':'badge-inactive'}" style="font-size:10px;padding:1px 7px">${vIsActive?'Aktiv':'Inaktiv'}</span>
             ${isRp?'<span class="badge badge-outlet" style="font-size:10px;padding:1px 7px">Restposten</span>':''}
-            ${(s.Aktionsangebot&&s.Aktionsangebot.trim())?`<span class="aktion-chip"><i class="ti ti-bolt" style="font-size:10px"></i> Aktion</span>`:''}
+            ${getAktion(s)?`<span class="aktion-chip"><i class="ti ti-bolt" style="font-size:10px"></i> Aktion</span>`:''}
           </span>
         </span>
         <div style="text-align:right;flex-shrink:0">
@@ -520,12 +532,12 @@ function buildVariantsHTML(item){
             </div>
           </div>
         </div>
-        ${(s.Aktionsangebot&&s.Aktionsangebot.trim())?`
+        ${getAktion(s)?`
         <div class="aktion-banner" style="padding:8px 10px;margin-bottom:0">
           <i class="ti ti-bolt" style="font-size:16px;color:#E65100;flex-shrink:0"></i>
           <div class="aktion-banner-text">
             <div class="aktion-banner-label">Aktionsangebot</div>
-            <div class="aktion-banner-msg">${escHtml(s.Aktionsangebot.trim())}</div>
+            <div class="aktion-banner-msg">${escHtml(getAktion(s))}</div>
           </div>
         </div>`:''}
         <div class="variant-stock-mini">
@@ -628,14 +640,14 @@ function updateAktionenBanner(){
   const banner=document.getElementById('aktionen-banner');
   const sub=document.getElementById('aktionen-banner-sub');
   if(currentLocation==='Coppi'&&DATA.length>0){
-    const aktionen=DATA.filter(r=>r.Aktionsangebot&&r.Aktionsangebot.trim());
+    const aktionen=DATA.filter(r=>getAktion(r));
     if(aktionen.length>0){banner.style.display='flex';sub.textContent=aktionen.length+' Artikel mit Sonderpreisen';}
     else banner.style.display='none';
   }else{banner.style.display='none';}
 }
 
 function openAktionenModal(){
-  const aktionen=DATA.filter(r=>r.Aktionsangebot&&r.Aktionsangebot.trim()).sort((a,b)=>(a.NAME||'').localeCompare(b.NAME||'','de'));
+  const aktionen=DATA.filter(r=>getAktion(r)).sort((a,b)=>(a.NAME||'').localeCompare(b.NAME||'','de'));
   const STOCK_KEYS=['Coppi','Steglitz','Zentrallager','Freiburg','Hamburg'];
   const sc=n=>n===0?'s0':n<=1?'slow':'sok';
   const html=aktionen.map(item=>{
@@ -646,7 +658,7 @@ function openAktionenModal(){
       <div class="aktion-list-info">
         <div class="aktion-list-name">${escHtml(item.NAME||item.ARTIKELNR)}</div>
         <div class="aktion-list-nr">${escHtml(item.ARTIKELNR)}</div>
-        <div class="aktion-list-tag"><i class="ti ti-bolt" style="font-size:10px"></i> ${escHtml(item.Aktionsangebot.trim())}</div>
+        <div class="aktion-list-tag"><i class="ti ti-bolt" style="font-size:10px"></i> ${escHtml(getAktion(item))}</div>
       </div>
       <div class="aktion-list-stock">
         <div class="aktion-list-stk ${sc(locStk)}">${locStk} Stk.</div>
