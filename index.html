@@ -998,7 +998,7 @@
     const banner = document.getElementById('aktionen-banner');
     const sub    = document.getElementById('aktionen-banner-sub');
     // Banner für alle Standorte anzeigen (wenn Standort gewählt)
-    if (currentLocation && DATA.length > 0) {
+    if (currentLocation === 'Coppi' && DATA.length > 0) {
       const aktionen = DATA.filter(r => r.Aktionsangebot && r.Aktionsangebot.trim());
       if (aktionen.length > 0) {
         banner.style.display = 'flex';
