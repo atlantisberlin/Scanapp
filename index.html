@@ -8,6 +8,8 @@
   <meta name="theme-color" content="#ffffff">
   <title>Artikelscanner</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.34.0/dist/tabler-icons.min.css">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="favicon.svg">
   <style>
     :root {
       --bg: #ffffff;
@@ -332,7 +334,7 @@
       <div class="divider-line"></div>
     </div>
     <div class="search-row">
-      <input type="text" id="search-input" placeholder="EAN oder Artikelnummer…"
+      <input type="text" id="search-input" placeholder="Name, Marke, Art-Nr. oder EAN…"
         oninput="onInput(this.value)"
         onkeydown="if(event.key==='Enter')doSearch()"
         inputmode="text" autocomplete="off" autocorrect="off" spellcheck="false">
