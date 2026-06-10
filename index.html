@@ -369,7 +369,7 @@
   }
 
   async function loadData() {
-    setStatus('loading', 'Daten werden geladen\u2026');
+    setStatus('loading', 'Daten werden geladen…');
     document.getElementById('scan-btn').disabled = true;
     try {
       const res = await fetch(SHEET_URL);
@@ -377,11 +377,11 @@
       const text = await res.text();
       DATA = parseCSV(text).filter(r => r.ARTIKELNR && r.ARTIKELNR.length > 0);
       const time = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-      setStatus('ok', `${DATA.length} Artikel \u00b7 ${time}`);
+      setStatus('ok', `${DATA.length} Artikel · ${time}`);
       updateAktionenBanner();
       document.getElementById('scan-btn').disabled = false;
     } catch (e) {
-      setStatus('error', 'Ladefehler \u2014 Tabelle \u00f6ffentlich freigegeben?');
+      setStatus('error', 'Ladefehler — Tabelle öffentlich freigegeben?');
       document.getElementById('scan-btn').disabled = false;
     }
   }
@@ -435,7 +435,7 @@
     }).join('');
     document.getElementById('result-area').innerHTML = `
       <div class="results-list">
-        <div class="results-header">${items.length} Treffer f\u00fcr \u201e${escHtml(query)}\u201c</div>
+        <div class="results-header">${items.length} Treffer für „${escHtml(query)}"</div>
         ${rows}
       </div>`;
   }
@@ -473,12 +473,12 @@
           <div class="result-name">${escHtml(item.NAME||'Unbekannter Artikel')}</div>
           <span class="badge ${statusClass}">${isActive?'Aktiv':'Inaktiv'}</span>
         </div>
-        ${isRestposten ? `<div class="restposten-banner" style="margin-bottom:12px"><i class="ti ti-tag"></i> Restposten \u2014 reduzierter Abverkauf</div>` : ''}
+        ${isRestposten ? `<div class="restposten-banner" style="margin-bottom:12px"><i class="ti ti-tag"></i> Restposten — reduzierter Abverkauf</div>` : ''}
         ${(item.Aktionsangebot&&item.Aktionsangebot.trim()) ? `
         <div class="aktion-banner">
           <i class="ti ti-bolt"></i>
           <div class="aktion-banner-text">
-            <div class="aktion-banner-label">\u26a1 Aktionsangebot</div>
+            <div class="aktion-banner-label">⚡ Aktionsangebot</div>
             <div class="aktion-banner-msg">${escHtml(item.Aktionsangebot.trim())}</div>
           </div>
         </div>` : ''}
@@ -499,9 +499,9 @@
             </div>
             ${item.EAN ? `<div><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px">EAN</div><div class="article-ean">${escHtml(item.EAN)}</div></div>` : ''}
             <div class="price-row" style="margin-bottom:0">
-              ${preis>0 ? `<span class="price-main" style="font-size:20px">\u20ac\u00a0${preis.toFixed(2).replace('.',',')}</span>` : `<span style="font-size:14px;color:var(--text3)">Kein Preis</span>`}
-              ${uvp>preis&&preis>0 ? `<span class="price-uvp">UVP\u00a0\u20ac\u00a0${uvp.toFixed(2).replace('.',',')}</span>` : ''}
-              ${savingPct>0 ? `<span class="price-saving">-${savingPct}\u00a0%</span>` : ''}
+              ${preis>0 ? `<span class="price-main" style="font-size:20px">€ ${preis.toFixed(2).replace('.',',')}</span>` : `<span style="font-size:14px;color:var(--text3)">Kein Preis</span>`}
+              ${uvp>preis&&preis>0 ? `<span class="price-uvp">UVP € ${uvp.toFixed(2).replace('.',',')}</span>` : ''}
+              ${savingPct>0 ? `<span class="price-saving">-${savingPct} %</span>` : ''}
             </div>
             <div class="meta-row" style="margin-bottom:0">
               ${kat ? `<span class="chip"><i class="ti ti-category"></i>${escHtml(kat)}</span>` : ''}
@@ -573,8 +573,8 @@
                 <button class="copy-btn" onclick="copyArticleNr('${s.ARTIKELNR.replace(/'/g,"\\'")}',this)" title="Kopieren"><i class="ti ti-copy"></i></button>
               </div>
               <div class="variant-price-row">
-                ${preis>0?`<span class="variant-price-main">\u20ac ${preis.toFixed(2).replace('.',',')}</span>`:`<span style="font-size:13px;color:var(--text3)">Kein Preis</span>`}
-                ${uvp>preis&&preis>0?`<span class="variant-price-uvp">UVP \u20ac ${uvp.toFixed(2).replace('.',',')}</span>`:''}
+                ${preis>0?`<span class="variant-price-main">€ ${preis.toFixed(2).replace('.',',')}</span>`:`<span style="font-size:13px;color:var(--text3)">Kein Preis</span>`}
+                ${uvp>preis&&preis>0?`<span class="variant-price-uvp">UVP € ${uvp.toFixed(2).replace('.',',')}</span>`:''}
                 ${savPct>0?`<span class="variant-price-saving">-${savPct} %</span>`:''}
               </div>
             </div>
@@ -609,7 +609,7 @@
     const results = searchArticles(q);
     if (results.length === 1) renderResult(results[0]);
     else if (results.length > 1) renderList(results, q);
-    else showError('Kein Artikel gefunden f\u00fcr: ' + q);
+    else showError('Kein Artikel gefunden für: ' + q);
   }
 
   function onInput(val) {
@@ -623,7 +623,7 @@
 
   async function startScanner() {
     if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-      showError('Kamera ben\u00f6tigt HTTPS.'); return;
+      showError('Kamera benötigt HTTPS.'); return;
     }
     if (typeof Html5Qrcode === 'undefined') { showError('Scanner-Bibliothek nicht geladen.'); return; }
     document.getElementById('video-wrapper').style.display = 'block';
