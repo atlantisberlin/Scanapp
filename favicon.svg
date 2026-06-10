@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Blauer abgerundeter Hintergrund -->
+  <rect width="64" height="64" rx="14" fill="#185FA5"/>
+  <!-- Scan-Rahmen oben links -->
+  <path d="M10 10 L10 20 M10 10 L20 10" stroke="white" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <!-- Scan-Rahmen oben rechts -->
+  <path d="M54 10 L54 20 M54 10 L44 10" stroke="white" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <!-- Scan-Rahmen unten links -->
+  <path d="M10 54 L10 44 M10 54 L20 54" stroke="white" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <!-- Scan-Rahmen unten rechts -->
+  <path d="M54 54 L54 44 M54 54 L44 54" stroke="white" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <!-- Barcode-Striche in der Mitte -->
+  <line x1="18" y1="24" x2="18" y2="40" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  <line x1="24" y1="22" x2="24" y2="42" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  <line x1="29" y1="24" x2="29" y2="40" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="35" y1="22" x2="35" y2="42" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  <line x1="40" y1="24" x2="40" y2="40" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  <line x1="46" y1="22" x2="46" y2="42" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  <!-- Scan-Linie (rot/orange) -->
+  <line x1="11" y1="32" x2="53" y2="32" stroke="#FF6B35" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
+</svg>
