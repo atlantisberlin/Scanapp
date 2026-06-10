@@ -56,14 +56,87 @@
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     body { overflow-x: hidden; }
-    #app { max-width: 480px; margin: 0 auto; padding: 16px; min-height: 100vh; }
+    #app { max-width: 480px; margin: 0 auto; padding: 0; min-height: 100vh; }
+    .scan-section { padding: 14px 16px; }
+    .result-card, .results-list { margin: 0 16px 16px; }
+    .empty-state { padding: 40px 16px; }
 
     /* Header */
-    .header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; padding-bottom: 16px; border-bottom: 0.5px solid var(--border); }
-    .header-icon { width: 40px; height: 40px; border-radius: var(--radius); background: var(--blue-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .header-icon i { font-size: 20px; color: var(--blue); }
-    .header h1 { font-size: 17px; font-weight: 600; color: var(--text); line-height: 1.2; }
-    .header p { font-size: 12px; color: var(--text2); margin-top: 1px; }
+    /* Compact top bar */
+    .top-bar { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 0.5px solid var(--border); background: var(--bg); position: sticky; top: 0; z-index: 50; }
+    .top-bar-icon { width: 32px; height: 32px; border-radius: var(--radius); background: var(--blue-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .top-bar-icon i { font-size: 16px; color: var(--blue); }
+    .top-bar-info { flex: 1; min-width: 0; }
+    .top-bar-title { font-size: 15px; font-weight: 600; color: var(--text); }
+    .top-bar-meta { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text2); margin-top: 1px; flex-wrap: wrap; }
+    .top-bar-meta .loc-chip { display: flex; align-items: center; gap: 3px; color: var(--blue); font-weight: 500; cursor: pointer; }
+    .top-bar-meta .loc-chip i { font-size: 12px; }
+    .top-bar-aktion-btn { flex-shrink: 0; background: #FFE69C; border: 1px solid #FFCA28; border-radius: var(--radius); padding: 5px 9px; font-size: 11px; font-weight: 600; color: #633806; cursor: pointer; display: none; align-items: center; gap: 4px; }
+    .top-bar-aktion-btn i { font-size: 12px; }
+
+    /* Tab navigation */
+    .tab-nav { display: flex; border-bottom: 0.5px solid var(--border); background: var(--bg); position: sticky; top: 53px; z-index: 49; }
+    .tab-nav-item { flex: 1; padding: 8px 4px 6px; text-align: center; font-size: 10px; color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; user-select: none; }
+    .tab-nav-item i { display: block; font-size: 19px; margin-bottom: 2px; }
+    .tab-nav-item.active { color: var(--blue); border-bottom-color: var(--blue); }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* Verlauf */
+    .history-item { display: flex; align-items: center; gap: 10px; padding: 10px 13px; border-bottom: 0.5px solid var(--border); cursor: pointer; }
+    .history-item:active { background: var(--bg2); }
+    .history-img { width: 40px; height: 40px; border-radius: var(--radius); background: var(--bg2); flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    .history-img img { width: 100%; height: 100%; object-fit: contain; padding: 3px; }
+    .history-info { flex: 1; min-width: 0; }
+    .history-name { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.3; }
+    .history-nr { font-size: 11px; color: var(--text3); font-family: monospace; }
+    .history-time { font-size: 10px; color: var(--text3); white-space: nowrap; }
+    .history-empty { text-align: center; padding: 40px 16px; color: var(--text3); font-size: 13px; }
+    .history-empty i { font-size: 40px; display: block; margin-bottom: 10px; opacity: 0.3; }
+
+    /* Einstellungen Tab */
+    .settings-section { padding: 16px; }
+    .settings-title { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+    .settings-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 0.5px solid var(--border); }
+    .settings-row:last-child { border-bottom: none; }
+    .settings-row-label { font-size: 14px; color: var(--text); }
+    .settings-row-val { font-size: 13px; color: var(--text2); display: flex; align-items: center; gap: 6px; }
+
+    /* Compact top bar */
+    .top-bar { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 0.5px solid var(--border); background: var(--bg); }
+    .top-bar-icon { width: 32px; height: 32px; border-radius: var(--radius); background: var(--blue-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .top-bar-icon i { font-size: 16px; color: var(--blue); }
+    .top-bar-info { flex: 1; min-width: 0; }
+    .top-bar-title { font-size: 15px; font-weight: 600; color: var(--text); }
+    .top-bar-meta { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text2); margin-top: 2px; flex-wrap: wrap; }
+
+    /* Tab navigation — fixed bottom */
+    .tab-nav { display: flex; border-top: 0.5px solid var(--border); background: var(--bg); position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; max-width: 480px; margin: 0 auto; padding-bottom: env(safe-area-inset-bottom, 0px); }
+    .tab-nav-item { flex: 1; padding: 8px 4px 6px; text-align: center; font-size: 10px; color: var(--text3); cursor: pointer; border-top: 2px solid transparent; transition: color 0.15s, border-color 0.15s; user-select: none; }
+    .tab-nav-item i { display: block; font-size: 19px; margin-bottom: 2px; }
+    .tab-nav-item.active { color: var(--blue); border-top-color: var(--blue); }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+
+    /* Verlauf */
+    .history-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 0.5px solid var(--border); cursor: pointer; }
+    .history-item:active { background: var(--bg2); }
+    .history-img { width: 40px; height: 40px; border-radius: var(--radius); background: var(--bg2); flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    .history-img img { width: 100%; height: 100%; object-fit: contain; padding: 3px; }
+    .history-info { flex: 1; min-width: 0; }
+    .history-name { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.3; }
+    .history-nr { font-size: 11px; color: var(--text3); font-family: monospace; }
+    .history-time { font-size: 10px; color: var(--text3); white-space: nowrap; }
+    .history-empty { text-align: center; padding: 40px 16px; color: var(--text3); font-size: 13px; }
+    .history-empty i { font-size: 40px; display: block; margin-bottom: 10px; opacity: 0.3; }
+
+    /* Einstellungen */
+    .settings-section { padding: 16px; }
+    .settings-title { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+    .settings-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 0.5px solid var(--border); }
+    .settings-row:last-child { border-bottom: none; }
+    .settings-row-label { font-size: 14px; color: var(--text); }
+    .settings-row-val { font-size: 13px; color: var(--text2); display: flex; align-items: center; gap: 6px; }
 
     /* Status bar */
     .status-bar { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 14px; padding: 8px 12px; border-radius: var(--radius); background: var(--bg2); color: var(--text2); }
@@ -287,65 +360,120 @@
 </head>
 <body>
 <div id="app">
-  <div class="header">
-    <div class="header-icon"><i class="ti ti-scan"></i></div>
-    <div>
-      <h1>Artikelscanner</h1>
-      <p>EAN scannen oder Nummer eingeben</p>
+  <h2 class="sr-only">Artikelscanner</h2>
+  <!-- Kompakte Top-Bar -->
+  <div class="top-bar">
+    <div class="top-bar-icon"><i class="ti ti-scan" aria-hidden="true"></i></div>
+    <div class="top-bar-info">
+      <div class="top-bar-title">Artikelscanner</div>
+      <div class="top-bar-meta">
+        <span id="status-meta" style="display:flex;align-items:center;gap:4px">
+          <i class="ti ti-loader s-loading spinning" id="status-icon" style="font-size:12px"></i>
+          <span id="status-text">Laden…</span>
+        </span>
+        <span id="loc-meta" style="display:none;align-items:center;gap:3px;color:var(--blue);font-weight:500;cursor:pointer" onclick="document.getElementById('location-modal').classList.remove('hidden')">
+          <i class="ti ti-map-pin" style="font-size:12px"></i><span id="location-label">Standort</span>
+        </span>
+      </div>
     </div>
-  </div>
-
-  <div class="status-bar" id="status-bar">
-    <i class="ti ti-loader s-loading spinning" id="status-icon"></i>
-    <span id="status-text">Daten werden geladen…</span>
-    <button class="reload-btn" onclick="loadData()" title="Neu laden">
-      <i class="ti ti-refresh"></i> Aktualisieren
+    <button id="aktionen-banner" style="display:none;background:#FFE69C;border:1px solid #FFCA28;border-radius:var(--radius);padding:5px 9px;font-size:11px;font-weight:600;color:#633806;cursor:pointer;align-items:center;gap:4px" onclick="openAktionenModal()">
+      <i class="ti ti-bolt" style="font-size:12px"></i><span id="aktionen-banner-sub">Aktionen</span>
     </button>
   </div>
 
-  <!-- Standort-Anzeige -->
-  <div class="location-bar" id="location-bar" onclick="document.getElementById('location-modal').classList.remove('hidden')" style="display:none">
-    <i class="ti ti-map-pin"></i>
-    <span id="location-label">Kein Standort gewählt</span>
-    <button class="change-btn">Ändern</button>
-  </div>
-
-  <!-- Aktionsangebote Banner (nur Coppi) -->
-  <div id="aktionen-banner" style="display:none" class="aktionen-banner" onclick="openAktionenModal()">
-    <span class="aktionen-banner-icon">⚡</span>
-    <div class="aktionen-banner-text">
-      <div class="aktionen-banner-title">Aktuelle Aktionsangebote</div>
-      <div class="aktionen-banner-sub" id="aktionen-banner-sub">Artikel mit Sonderpreisen anzeigen</div>
+  <!-- Tab: Scannen -->
+  <div class="tab-pane active" id="pane-scan">
+    <div class="scan-section">
+      <div id="video-wrapper">
+        <div id="qr-reader"></div>
+        <button class="close-scan" onclick="stopScanner()" style="top:8px;right:8px"><i class="ti ti-x"></i></button>
+      </div>
+      <button class="scan-btn" id="scan-btn" onclick="startScanner()">
+        <i class="ti ti-camera"></i> Barcode scannen
+      </button>
+      <div class="divider">
+        <div class="divider-line"></div>
+        <span>oder manuell suchen</span>
+        <div class="divider-line"></div>
+      </div>
+      <div class="search-row">
+        <input type="text" id="search-input" placeholder="Name, Marke, Art-Nr. oder EAN…"
+          oninput="onInput(this.value)"
+          onkeydown="if(event.key==='Enter')doSearch()"
+          inputmode="text" autocomplete="off" autocorrect="off" spellcheck="false">
+        <button onclick="doSearch()">Suchen</button>
+      </div>
     </div>
-    <i class="ti ti-chevron-right aktionen-banner-arrow"></i>
-  </div>
-
-  <div class="scan-section">
-    <div id="video-wrapper">
-      <div id="qr-reader"></div>
-      <button class="close-scan" onclick="stopScanner()" style="top:8px;right:8px"><i class="ti ti-x"></i></button>
-    </div>
-    <button class="scan-btn" id="scan-btn" onclick="startScanner()">
-      <i class="ti ti-camera"></i> Barcode scannen
-    </button>
-    <div class="divider">
-      <div class="divider-line"></div>
-      <span>oder manuell suchen</span>
-      <div class="divider-line"></div>
-    </div>
-    <div class="search-row">
-      <input type="text" id="search-input" placeholder="Name, Marke, Art-Nr. oder EAN…"
-        oninput="onInput(this.value)"
-        onkeydown="if(event.key==='Enter')doSearch()"
-        inputmode="text" autocomplete="off" autocorrect="off" spellcheck="false">
-      <button onclick="doSearch()">Suchen</button>
+    <div id="result-area">
+      <div class="empty-state">
+        <i class="ti ti-barcode"></i>
+        <p>Barcode scannen oder<br>EAN / Artikelnummer eingeben</p>
+      </div>
     </div>
   </div>
 
-  <div id="result-area">
-    <div class="empty-state">
-      <i class="ti ti-barcode"></i>
-      <p>Barcode scannen oder<br>EAN / Artikelnummer eingeben</p>
+  <!-- Tab: Aktionen -->
+  <div class="tab-pane" id="pane-aktionen">
+    <div id="aktionen-tab-list" style="padding:12px 16px"></div>
+  </div>
+
+  <!-- Tab: Verlauf -->
+  <div class="tab-pane" id="pane-history">
+    <div id="history-list">
+      <div class="history-empty"><i class="ti ti-history"></i><p>Noch keine Artikel gescannt</p></div>
+    </div>
+  </div>
+
+  <!-- Tab: Einstellungen -->
+  <div class="tab-pane" id="pane-settings">
+    <div class="settings-section">
+      <div class="settings-title">Standort</div>
+      <div class="settings-row">
+        <span class="settings-row-label">Mein Standort</span>
+        <span class="settings-row-val" id="settings-loc-val">Nicht gewählt <i class="ti ti-chevron-right" style="font-size:14px;color:var(--text3)"></i></span>
+      </div>
+      <button onclick="document.getElementById('location-modal').classList.remove('hidden')" style="width:100%;margin-top:12px;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer">
+        Standort ändern
+      </button>
+    </div>
+    <div class="settings-section" style="border-top:0.5px solid var(--border)">
+      <div class="settings-title">Daten</div>
+      <div class="settings-row">
+        <span class="settings-row-label">Artikel geladen</span>
+        <span class="settings-row-val" id="settings-count">—</span>
+      </div>
+      <div class="settings-row">
+        <span class="settings-row-label">Letzte Aktualisierung</span>
+        <span class="settings-row-val" id="settings-time">—</span>
+      </div>
+      <button onclick="loadData()" style="width:100%;margin-top:12px;padding:11px;background:var(--bg2);color:var(--text);border:0.5px solid var(--border);border-radius:var(--radius);font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+        <i class="ti ti-refresh"></i> Daten aktualisieren
+      </button>
+    </div>
+    <div class="settings-section" style="border-top:0.5px solid var(--border)">
+      <div class="settings-title">Verlauf</div>
+      <div class="settings-row">
+        <span class="settings-row-label">Gespeicherte Einträge</span>
+        <span class="settings-row-val" id="settings-history-count">0</span>
+      </div>
+      <button onclick="clearHistory()" style="width:100%;margin-top:12px;padding:11px;background:var(--bg2);color:var(--red-text);border:0.5px solid var(--border);border-radius:var(--radius);font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+        <i class="ti ti-trash"></i> Verlauf löschen
+      </button>
+    </div>
+  </div>
+  <!-- Tab-Navigation (unten) -->
+  <div class="tab-nav">
+    <div class="tab-nav-item active" id="tab-scan" onclick="switchTab('scan')">
+      <i class="ti ti-scan" aria-hidden="true"></i>Scannen
+    </div>
+    <div class="tab-nav-item" id="tab-aktionen" onclick="switchTab('aktionen')">
+      <i class="ti ti-bolt" aria-hidden="true"></i>Aktionen
+    </div>
+    <div class="tab-nav-item" id="tab-history" onclick="switchTab('history')">
+      <i class="ti ti-history" aria-hidden="true"></i>Verlauf
+    </div>
+    <div class="tab-nav-item" id="tab-settings" onclick="switchTab('settings')">
+      <i class="ti ti-settings" aria-hidden="true"></i>Einstellungen
     </div>
   </div>
 </div>
@@ -401,6 +529,126 @@
     else                     icon.className += 'ti-alert-circle s-error';
   }
 
+  // Tab-Navigation
+  function switchTab(tab) {
+    ['scan','aktionen','history','settings'].forEach(t => {
+      document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+      document.getElementById('pane-' + t).classList.toggle('active', t === tab);
+    });
+    if (tab === 'aktionen') renderAktionenTab();
+    if (tab === 'history')  renderHistory();
+    if (tab === 'settings') renderSettings();
+  }
+
+  function renderAktionenTab() {
+    const aktionen = DATA.filter(r => r.Aktionsangebot && r.Aktionsangebot.trim())
+      .sort((a,b) => (a.NAME||'').localeCompare(b.NAME||'', 'de'));
+    const STOCK_KEYS = ['Coppi','Steglitz','Zentrallager','Freiburg','Hamburg'];
+    const sc = n => n === 0 ? 's0' : n <= 1 ? 'slow' : 'sok';
+    const container = document.getElementById('aktionen-tab-list');
+    if (!aktionen.length) {
+      container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3);font-size:13px"><i class="ti ti-bolt" style="font-size:40px;display:block;margin-bottom:10px;opacity:0.3"></i>Keine Aktionsangebote gefunden</div>';
+      return;
+    }
+    container.innerHTML = `<div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">${aktionen.length} Aktionsangebote</div>` +
+      aktionen.map(item => {
+        const locStk = currentLocation ? (parseInt(item[currentLocation])||0) : STOCK_KEYS.reduce((s,k)=>s+(parseInt(item[k])||0),0);
+        const img = (item.BILD_URL||'').trim();
+        const hasImg = img && img !== 'default.jpg';
+        return `<button class="aktion-list-item" onclick="selectFromAktionen('${item.ARTIKELNR.replace(/'/g,"\'")}')">
+          <div class="aktion-list-img">
+            ${hasImg ? `<img src="https://www.atlantiscloud.de/images/products/mini/${img}" alt="" onerror="this.style.display='none'">` : '<i class="ti ti-photo-off" style="font-size:18px;color:var(--text3);opacity:0.4"></i>'}
+          </div>
+          <div class="aktion-list-info">
+            <div class="aktion-list-name">${escHtml(item.NAME||item.ARTIKELNR)}</div>
+            <div class="aktion-list-nr">${escHtml(item.ARTIKELNR)}</div>
+            <div class="aktion-list-tag"><i class="ti ti-bolt" style="font-size:10px"></i> ${escHtml(item.Aktionsangebot.trim())}</div>
+          </div>
+          <div class="aktion-list-stock">
+            <div class="aktion-list-stk ${sc(locStk)}">${locStk} Stk.</div>
+            <div class="aktion-list-loc">${currentLocation||'Gesamt'}</div>
+          </div>
+        </button>`;
+      }).join('');
+  }
+
+  // Scan-Verlauf
+  let scanHistory = JSON.parse(localStorage.getItem('atl_history') || '[]');
+
+  function addToHistory(item) {
+    scanHistory = scanHistory.filter(h => h.nr !== item.ARTIKELNR);
+    scanHistory.unshift({ nr: item.ARTIKELNR, name: item.NAME, img: item.BILD_URL, time: Date.now() });
+    if (scanHistory.length > 30) scanHistory = scanHistory.slice(0, 30);
+    localStorage.setItem('atl_history', JSON.stringify(scanHistory));
+    updateSettingsHistoryCount();
+  }
+
+  function renderHistory() {
+    const list = document.getElementById('history-list');
+    if (!scanHistory.length) {
+      list.innerHTML = '<div class="history-empty"><i class="ti ti-history"></i><p>Noch keine Artikel gescannt</p></div>';
+      return;
+    }
+    list.innerHTML = scanHistory.map(h => {
+      const img = (h.img||'').trim();
+      const hasImg = img && img !== 'default.jpg';
+      const ago = timeAgo(h.time);
+      return `<div class="history-item" onclick="loadFromHistory('${h.nr.replace(/'/g,"\'")}')">
+        <div class="history-img">
+          ${hasImg ? `<img src="https://www.atlantiscloud.de/images/products/mini/${img}" alt="" onerror="this.style.display='none'">` : '<i class="ti ti-photo-off" style="font-size:16px;color:var(--text3);opacity:0.4"></i>'}
+        </div>
+        <div class="history-info">
+          <div class="history-name">${escHtml(h.name||h.nr)}</div>
+          <div class="history-nr">${escHtml(h.nr)}</div>
+        </div>
+        <div class="history-time">${ago}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function loadFromHistory(nr) {
+    switchTab('scan');
+    const item = findArticle(nr);
+    if (item) {
+      document.getElementById('search-input').value = nr;
+      renderResult(item);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  function clearHistory() {
+    if (!confirm('Verlauf wirklich löschen?')) return;
+    scanHistory = [];
+    localStorage.removeItem('atl_history');
+    renderHistory();
+    updateSettingsHistoryCount();
+  }
+
+  function timeAgo(ts) {
+    const diff = Math.floor((Date.now() - ts) / 1000);
+    if (diff < 60) return 'Gerade eben';
+    if (diff < 3600) return Math.floor(diff/60) + ' Min.';
+    if (diff < 86400) return Math.floor(diff/3600) + ' Std.';
+    return Math.floor(diff/86400) + ' Tage';
+  }
+
+  function renderSettings() {
+    const locEl = document.getElementById('settings-loc-val');
+    if (locEl) locEl.innerHTML = (currentLocation || 'Nicht gewählt') + ' <i class="ti ti-chevron-right" style="font-size:14px;color:var(--text3)"></i>';
+    updateSettingsHistoryCount();
+    const timeEl = document.getElementById('settings-time');
+    if (timeEl && lastLoadTime) timeEl.textContent = lastLoadTime;
+    const cntEl = document.getElementById('settings-count');
+    if (cntEl) cntEl.textContent = DATA.length ? DATA.length + ' Artikel' : '—';
+  }
+
+  function updateSettingsHistoryCount() {
+    const el = document.getElementById('settings-history-count');
+    if (el) el.textContent = scanHistory.length;
+  }
+
+  let lastLoadTime = '';
+
   // CSV-Parser (robust gegen Kommas in Anführungszeichen)
   // Canonical field name map — maps any casing variant to the key used in code
   const FIELD_MAP = {
@@ -452,7 +700,8 @@
       const text = await res.text();
       DATA = parseCSV(text).filter(r => r.ARTIKELNR && r.ARTIKELNR.length > 0);
       const time = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-      setStatus('ok', `${DATA.length} Artikel geladen · ${time}`);
+      lastLoadTime = time;
+      setStatus('ok', `${DATA.length} Artikel · ${time}`);
       updateAktionenBanner();
       document.getElementById('scan-btn').disabled = false;
     } catch (e) {
@@ -527,6 +776,8 @@
       </button>`;
     }).join('');
 
+    // Add to scan history
+    addToHistory(item);
     document.getElementById('result-area').innerHTML = `
       <div class="results-list">
         <div class="results-header">${items.length} Treffer für „${escHtml(query)}"</div>
@@ -987,10 +1238,11 @@
   }
 
   function updateLocationBar() {
-    const bar   = document.getElementById('location-bar');
+    // Update location label in top bar
     const label = document.getElementById('location-label');
-    bar.style.display = 'flex';
-    label.textContent = currentLocation ? 'Mein Standort: ' + currentLocation : 'Alle Standorte';
+    if (label) label.textContent = currentLocation || 'Standort';
+    const locMeta = document.getElementById('loc-meta');
+    if (locMeta) locMeta.style.display = 'flex';
     updateAktionenBanner();
   }
 
@@ -1001,7 +1253,7 @@
     if (currentLocation === 'Coppi' && DATA.length > 0) {
       const aktionen = DATA.filter(r => r.Aktionsangebot && r.Aktionsangebot.trim());
       if (aktionen.length > 0) {
-        banner.style.display = 'flex';
+        banner.style.display = 'inline-flex';
         sub.textContent = aktionen.length + ' Artikel mit Sonderpreisen';
       } else {
         banner.style.display = 'none';
